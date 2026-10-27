@@ -336,9 +336,9 @@ main {
 
 .answer {
   display: grid;
-  gap: var(--space-1);
-  margin: var(--space-5) 0;
-  padding: var(--space-4) var(--space-5);
+  gap: 2px;
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
   background: var(--paper-raised);
   border: 1px solid var(--line);
   border-left: 3px solid var(--accent);
@@ -356,7 +356,7 @@ main {
 
 .answer p:last-child {
   margin: 0;
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
 }
 
 .version-badge {

@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import VersionStatusBar from '../components/VersionStatusBar.astro';
 import { getCollection } from 'astro:content';
 import { SITE_NAME, OFFICIAL_DOCS, OFFICIAL_REPO } from '../consts';
+import versions from '../data/versions.json';
 
 const pages = await getCollection('guide');
 const recent = pages
@@ -33,20 +34,15 @@ const jsonLd = [
 >
   <div class="container">
     <section class="hero">
-      <div class="hero__top">
-        <div class="hero__copy">
-          <p class="hero__eyebrow">dsh · developer preview</p>
-          <h1>DeepSeek Harness 中文手册</h1>
-          <p class="hero__lead">能装上、能跑通、能读懂的 dsh 指南。官方文档写接口与设计，这里补上手路径、排错，以及一条能自己复核的源码阅读顺序。</p>
-        </div>
-        <aside class="quickstart">
-          <p class="quickstart__label">最短路径</p>
-          <pre><code>npx @deepseek-ai/dsh@latest web</code></pre>
-          <p class="quickstart__note">默认打开 <code>http://127.0.0.1:3080</code>，需要 Node 与 API Key。</p>
-          <a href="/install/npx/">完整安装步骤 →</a>
-        </aside>
+      <p class="hero__eyebrow">dsh · 中文上手手册</p>
+      <h1>DeepSeek Harness 中文手册</h1>
+      <p class="hero__lead">dsh（DeepSeek Harness）是 DeepSeek 开源的 AI Agent 运行框架：把模型、工具、插件和本地工作区接在一起。这本手册面向第一次上手的人——先帮你装好，再解释插件与版本，最后才带你读源码。</p>
+      <p class="hero__meta">核验于 {versions.checkedAt.slice(0, 10)} · dsh {versions.npm.latest} · <a href="/versions/">版本差异</a></p>
+      <div class="hero__actions">
+        <a class="button button--primary" href="/install/desktop/">第一次用：装桌面版</a>
+        <a class="button" href="/install/">三种安装方式怎么选</a>
       </div>
-      <VersionStatusBar />
+      <p class="hero__reassure">不需要先懂命令行，也不需要读源码。源码系列是选修，等你能跑起来再看。</p>
     </section>
 
     <section class="section">
@@ -69,6 +65,15 @@ const jsonLd = [
         </a>
       </div>
     </section>
+
+    <details class="quickstart-panel">
+      <summary>已经装好 Node？展开看命令行启动</summary>
+      <div class="quickstart">
+        <pre><code>npx @deepseek-ai/dsh@latest web</code></pre>
+        <p class="quickstart__note">默认打开 <code>http://127.0.0.1:3080</code>，需要 Node 与 API Key。看到 401 不是失败：要用启动日志里带 token 的地址。</p>
+        <a href="/install/npx/">完整的 npx 步骤 →</a>
+      </div>
+    </details>
 
     <section class="section">
       <h2>装完先做这三件事</h2>
@@ -115,7 +120,7 @@ const jsonLd = [
 
       <section class="section">
         <h2>怎么核验</h2>
-        <p>每条命令在 Windows 11 + Node 24 上实跑一次，证据留在仓库。每页头部写核验版本与日期；超过 30 天会显示提示条。源码文章固定到 <code>dsh-v0.2.1-rc.3</code> 的 commit，行号只对那份源码有效。</p>
+        <p>每条命令在 Windows 11 + Node 24 上实跑一次。每页头部写核验版本与日期；超过 30 天会显示提示条。源码文章固定到 <code>dsh-v0.2.1-rc.3</code> 的 commit，行号只对那份源码有效。</p>
         <h2>权威来源</h2>
         <ul class="links">
           <li><a href={OFFICIAL_DOCS} rel="noopener">官方文档</a>：术语与接口以这里为准。</li>
@@ -123,34 +128,77 @@ const jsonLd = [
         </ul>
       </section>
     </div>
+
+    <VersionStatusBar />
   </div>
 </BaseLayout>
 
 <style>
   .hero {
-    padding: var(--space-8) 0 var(--space-6);
+    padding: var(--space-7) 0 var(--space-6);
     border-bottom: 1px solid var(--line);
   }
-  .hero__top {
-    display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
-    gap: var(--space-7);
-    align-items: end;
+  .hero__meta {
+    margin: var(--space-4) 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-faint);
   }
-  .quickstart {
-    padding: var(--space-5);
+  .hero__meta a {
+    color: var(--ink-faint);
+  }
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+  }
+  .button {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .button--primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+  .button--primary:hover {
+    background: var(--accent);
+    color: var(--accent-ink);
+    filter: brightness(1.06);
+  }
+  .hero__reassure {
+    margin: var(--space-4) 0 0;
+    font-size: var(--text-sm);
+    color: var(--ink-faint);
+  }
+  .quickstart-panel {
+    margin-top: var(--space-5);
+    padding: var(--space-4) var(--space-5);
     border: 1px solid var(--line);
     border-radius: var(--radius-md);
     background: var(--paper-raised);
-    box-shadow: var(--shadow-1);
   }
-  .quickstart__label {
-    margin: 0 0 var(--space-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
+  .quickstart-panel summary {
+    cursor: pointer;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+  .quickstart-panel[open] summary {
+    margin-bottom: var(--space-4);
   }
   .quickstart pre {
     margin: 0;
@@ -193,7 +241,7 @@ const jsonLd = [
     text-wrap: balance;
   }
   .hero__lead {
-    max-width: 52ch;
+    max-width: 58ch;
     margin: 0;
     font-size: var(--text-lg);
     color: var(--ink-soft);
@@ -295,9 +343,6 @@ const jsonLd = [
   @media (max-width: 860px) {
     .paths,
     .split {
-      grid-template-columns: 1fr;
-    }
-    .hero__top {
       grid-template-columns: 1fr;
     }
     .hero {

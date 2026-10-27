@@ -29,11 +29,23 @@ faq:
 
 ## 三条主线
 
-| 篇目 | 回答的问题 | 入口文件 | 你会看到 |
-|---|---|---|---|
-| [插件树](/source/plugin-tree/) | 一次 `dsh --profile web` 启动，96 行 base 配置怎么变成运行中的服务？ | `packages/boot/app-boot/src/profile.ts` | profile、bundle、patch、`composeEntries()`、Cordis Loader |
-| [消息生命周期](/source/message-lifecycle/) | 一条 `followup()` 怎么走完 turn 和 step，什么时候写日志、什么时候发请求？ | `packages/core/agent-loop/src/agent.ts` | inbox、`agent/pre-step`、prompt 组装、请求冻结、流式结算 |
-| [工具流水线](/source/tool-pipeline/) | 模型发出 `tool call` 后，谁先看一眼、谁能拒绝、失败怎么变成结果？ | `packages/core/tools/src/index.ts` | 参数快照、审批、守卫、环绕分发、`post-execute`、`finalizeContent` |
+### 01 · [插件树](/source/plugin-tree/)
+
+一次 `dsh --profile web` 启动，96 行 base 配置怎么变成运行中的服务？
+
+入口：`packages/boot/app-boot/src/profile.ts`。你会看到 profile、bundle、patch、`composeEntries()`、Cordis Loader。
+
+### 02 · [消息生命周期](/source/message-lifecycle/)
+
+一条 `followup()` 怎么走完 turn 和 step，什么时候写日志、什么时候发请求？
+
+入口：`packages/core/agent-loop/src/agent.ts`。你会看到 inbox、`agent/pre-step`、prompt 组装、请求冻结、流式结算。
+
+### 03 · [工具流水线](/source/tool-pipeline/)
+
+模型发出 `tool call` 后，谁先看一眼、谁能拒绝、失败怎么变成结果？
+
+入口：`packages/core/tools/src/index.ts`。你会看到参数快照、审批、守卫、环绕分发、`post-execute`、`finalizeContent`。
 
 三篇有先后关系。插件树解释“东西从哪来”，消息生命周期解释“谁在驱动”，工具流水线解释“能力怎么被安全地调用”。如果只想先解决一个具体问题，也可以直接跳到对应篇目，再回头补前置概念。
 
