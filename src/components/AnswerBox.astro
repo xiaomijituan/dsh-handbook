@@ -1,0 +1,10 @@
+---
+interface Props {
+  text: string;
+}
+const { text } = Astro.props;
+---
+<aside class="answer" aria-label="直接答案">
+  <p class="answer__label">直接答案</p>
+  <p>{text}</p>
+</aside>

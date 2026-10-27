@@ -1,0 +1,53 @@
+---
+import versions from '../data/versions.json';
+const checked = versions.checkedAt.slice(0, 10);
+---
+<section class="version-status" aria-label="当前版本状态">
+  <p class="version-status__title">当前版本 · {checked} 核验</p>
+  <dl>
+    <div><dt>npm latest</dt><dd>{versions.npm.latest}</dd></div>
+    <div><dt>npm next</dt><dd>{versions.npm.next}</dd></div>
+    <div><dt>GitHub 最新 tag</dt><dd>{versions.github.tag}</dd></div>
+  </dl>
+  <p class="version-status__hint"><code>npx</code> 默认装 latest，不一定是最新。差异见 <a href="/versions/">版本页</a>。</p>
+</section>
+
+<style>
+  .version-status {
+    margin: var(--space-6) 0 0;
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--paper-raised);
+    box-shadow: var(--shadow-1);
+  }
+  .version-status__title {
+    margin: 0 0 var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+    margin: 0;
+  }
+  dt {
+    font-size: var(--text-xs);
+    color: var(--ink-faint);
+  }
+  dd {
+    margin: var(--space-1) 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--ink);
+  }
+  .version-status__hint {
+    margin: var(--space-3) 0 0;
+    font-size: var(--text-sm);
+    color: var(--ink-soft);
+  }
+</style>

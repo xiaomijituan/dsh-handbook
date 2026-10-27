@@ -1,0 +1,14 @@
+---
+const { headings } = Astro.props;
+const items = headings.filter((h: { depth: number }) => h.depth === 2 || h.depth === 3);
+---
+{items.length > 0 && (
+  <nav class="toc" aria-label="本页目录">
+    <p class="toc__title">本页目录</p>
+    <ul>
+      {items.map((h: { depth: number; slug: string; text: string }) => (
+        <li class={h.depth === 3 ? 'toc__d3' : undefined}><a href={`#${h.slug}`}>{h.text}</a></li>
+      ))}
+    </ul>
+  </nav>
+)}

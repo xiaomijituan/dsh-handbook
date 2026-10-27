@@ -1,0 +1,87 @@
+---
+title: "从源码安装 DeepSeek Harness：pnpm 与构建"
+crumb: "源码安装"
+description: "源码安装的适用场景、Git 与 pnpm 前置、克隆构建启动命令，以及 Windows 上最常见的 pnpm 缺失与构建失败处理。"
+answer: "源码安装适合要改代码或开发插件的人：克隆官方仓库，用 pnpm 安装依赖并构建，再启动 web profile。2026-10-27 未在本机完成源码安装实测，步骤按官方 README 核对。"
+updated: "2026-10-27"
+verified:
+  dsh: "0.2.1-rc.2"
+  npm_latest: "0.2.1-rc.2"
+  npm_next: "0.2.1-rc.4"
+  gh_tag: "dsh-v0.2.1-rc.3"
+  date: "2026-10-27"
+  os: ["windows", "macos", "linux"]
+difficulty: "advanced"
+keywords: ["deepseek harness 源码安装", "dsh pnpm", "deepseek harness 开发"]
+related: ["plugins/first-plugin", "install/npx"]
+---
+
+## 什么时候需要源码
+
+只有三种情况值得走源码：
+
+1. 要改 dsh 本身的代码
+2. 要开发插件，需要本地联调
+3. 要跟着某个提交或分支验证问题
+
+只是想用，用 [桌面版](/install/desktop/) 或 [npx](/install/npx/) 更快。
+
+## 前置
+
+- Node 与 npm
+- **pnpm**：仓库使用 pnpm workspace
+- Git
+- Windows 上可能还需要 C++ 构建工具（部分原生依赖）
+
+pnpm 不是可选项。实测中，`dsh plugin` 这类命令内部也会转发给 pnpm；本机没有 pnpm 时，命令直接报“不是内部或外部命令”。先确认：
+
+```bash
+pnpm -v
+```
+
+pnpm 的安装方式与版本要求以官方 README 为准。不要在教程里写死一个版本号，尤其在 Node 版本变化之后。
+
+## 克隆与安装
+
+```bash
+git clone https://github.com/deepseek-ai/deepseek-harness.git
+cd deepseek-harness
+pnpm install
+```
+
+仓库较大，第一次安装依赖会比较久。网络不稳时先配置好 registry 或代理，避免中途失败留下半套依赖。
+
+## 构建与启动
+
+```bash
+pnpm run build
+pnpm dsh web
+```
+
+官方 README 里还提供了 `pnpm run dev:web`，用于开发时监听源码改动并重建客户端。日常运行用构建后的产物即可。
+
+启动后同样会打印带 token 的本地地址。裸访问 3080 返回 401 属于正常鉴权行为，见 [npx 安装](/install/npx/#确认服务起来了)。
+
+## 更新
+
+```bash
+git pull
+pnpm install
+pnpm run build
+```
+
+官方处于 developer preview，破坏性变更频繁。更新前先看 release 说明，不要把生产环境的 profile 直接跟着 main 走。
+
+## 常见失败
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| `pnpm: command not found` | pnpm 未安装或不在 PATH | 先安装 pnpm，再重开终端 |
+| `ERR_PNPM_...` 依赖解析失败 | lockfile 与 Node 版本不匹配 | 按 README 的 Node 要求切换版本，再重装 |
+| Windows 下 node-gyp 报错 | 缺 C++ 构建工具 | 安装官方要求的构建工具链 |
+| `EADDRINUSE` | 3080 被占用 | 结束占用进程或换端口 |
+| 构建成功但页面空白 | 只构建了部分产物 | 用官方推荐的构建命令重新构建 |
+
+## 本站核验说明
+
+本页的仓库命令按官方 README 与 2026-10-27 的仓库状态核对。**本机没有完成 `pnpm install` 与构建，源码安装未实测。** 遇到与本文不一致的输出，以官方仓库当前说明为准，并欢迎提 issue 纠错。

@@ -1,0 +1,26 @@
+{
+  "name": "dsh-handbook",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site dist",
+    "preview": "astro preview",
+    "versions": "node scripts/check-versions.mjs --write",
+    "check:versions": "node scripts/check-versions.mjs --strict",
+    "check:links": "node scripts/check-links.mjs dist",
+    "seo:og": "node scripts/gen-og.mjs",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "check": "npm run test && npm run check:versions && npm run build && npm run check:links"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "8.1.1",
+    "@astrojs/sitemap": "3.7.4",
+    "astro": "7.4.2",
+    "gray-matter": "4.0.3"
+  },
+  "devDependencies": {
+    "pagefind": "1.5.2"
+  }
+}

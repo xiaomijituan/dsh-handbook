@@ -1,0 +1,94 @@
+---
+title: "dsh 故障排查：从 401 到插件不显示"
+crumb: "排错"
+description: "按安装、启动、模型、插件四类整理 dsh 的常见故障与处理步骤，包含 401 鉴权、端口占用、pnpm 缺失与 profile 装错。"
+answer: "先做三个检查：Node 版本、3080 是否有响应、npm registry 是否可达。401 多半是打开了不带 token 的地址；插件不显示多半是 profile 不对。"
+updated: "2026-10-27"
+verified:
+  dsh: "0.2.1-rc.2"
+  npm_latest: "0.2.1-rc.2"
+  npm_next: "0.2.1-rc.4"
+  gh_tag: "dsh-v0.2.1-rc.3"
+  date: "2026-10-27"
+  os: ["windows", "macos", "linux"]
+difficulty: "beginner"
+keywords: ["deepseek harness 报错", "dsh 401", "dsh 装不上"]
+faq:
+  - q: "为什么打开 127.0.0.1:3080 一直显示 401？"
+    a: "裸地址没有带启动时生成的 token。用 dsh 启动日志里打印的完整地址，包含 ?token=...；带 token 的请求会下发 cookie，之后浏览器才拿到 200。"
+  - q: "插件装了但界面里不显示，怎么办？"
+    a: "先确认装进了哪个 profile。用 dsh --profile <name> --dump-config 查看该 profile 的 bundle 列表，再确认 Web UI 当前使用的也是这个 profile。"
+  - q: "npx 装的是不是最新版本？"
+    a: "不是。npx 默认拿 npm 的 latest 标签。2026-10-27 时 latest 是 0.2.1-rc.2，next 是 0.2.1-rc.4；要试 next 必须显式写 @next。"
+  - q: "API Key 存在哪里？"
+    a: "存储在 $DSH_HOME/.credentials.yaml，界面只保留凭据引用。不要把该目录提交到 Git，也不要把 Key 写进插件配置。"
+  - q: "dsh web 怎么停止？"
+    a: "前台运行按 Ctrl+C。进程脱离终端时，先找监听 3080 的 PID，再按 PID 结束；不要直接杀所有 node 进程。"
+related: ["install/npx", "plugins/install", "models"]
+---
+
+## 先做三个检查
+
+```bash
+node -v
+curl -I http://127.0.0.1:3080/
+npm ping
+```
+
+三条分别回答：Node 在不在、服务在不在、registry 通不通。先确定问题落在哪一层，再往下查。
+
+`curl -I` 返回 401 不代表服务坏了，见下一节。
+
+## 安装类
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| `node: command not found` | Node 未安装或不在 PATH | 安装 Node，重开终端 |
+| `pnpm: command not found` | 源码安装或 dsh plugin 需要 pnpm | 安装 pnpm，确认 `pnpm -v` |
+| 下载中断 | 桌面安装包约 250–276 MB | 用支持续传的下载工具 |
+| `ETIMEDOUT` / `ECONNRESET` | npm registry 或代理不可达 | 检查网络与 registry 配置 |
+| Windows 安装被拦截 | SmartScreen 或公司策略 | 更多信息 → 仍要运行；公司设备找 IT |
+
+## 启动类
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| `EADDRINUSE 127.0.0.1:3080` | 上一个 dsh 进程还在 | 找占用 3080 的 PID，结束后再启动 |
+| 一直 401 | 打开的是不带 token 的裸地址 | 用启动日志里完整的 `?token=` 地址 |
+| 页面空白 | 服务没起完或端口被别的程序占用 | 看终端日志；确认 3080 的监听者 |
+| 启动很慢 | 第一次下载依赖 | 等待完成，后续走缓存 |
+
+端口的处理顺序：先 `netstat -ano | grep 3080` 找 PID，再只结束那个 PID。不要用“杀掉所有 node”这种方式，容易误伤别的工程。
+
+## 模型类
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| 401 / 未授权 | Key 错误、过期或填错卡片 | 重新创建 Key，确认提供商 |
+| 模型不存在 | 模型 ID 与网关不一致 | 用“获取可用模型”或手动核对 ID |
+| 协议错误 | 网关协议与选项不一致 | 在三种协议里切换匹配项 |
+| 列表为空 | 网关不返回标准列表 | 手动添加模型 ID |
+| 保存后仍用旧模型 | 会话持有旧配置 | 新建会话或等下一次请求 |
+
+注意区分两种 401：页面的 401 是 Web UI 鉴权；模型请求的 401 是提供商的 Key 鉴权。两者原因不同。
+
+## 插件类
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| `pnpm` 不是内部或外部命令 | 插件 CLI 依赖 pnpm | 安装 pnpm 后重试 |
+| `plugin command failed; diagnostics` | pnpm 执行失败 | 打开提示里的 `pnpm.log` 看原始错误 |
+| 装完不显示 | 装进了别的 profile | 用 `--profile` 指定正确 profile |
+| 索引里没有插件 | 没有添加索引源 | 开启“自定义插件索引”并添加索引 URL |
+| 安装被拒绝 | 插件与当前 dsh 版本不兼容 | 查看插件的 `engines.dsh` 范围 |
+
+## 还是不行怎么求助
+
+在 GitHub 仓库提 issue，选“装不上”模板，附上：
+
+1. 操作系统与版本
+2. `node -v`、`npm -v`、`pnpm -v`（如果用到）
+3. 完整命令与完整报错，不要只截最后一行
+4. 你期望发生什么、实际发生什么
+
+不要粘贴 API Key、cookie 或 `$DSH_HOME/.credentials.yaml` 的内容。需要提供配置时，先脱敏。

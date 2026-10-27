@@ -1,0 +1,153 @@
+---
+title: "写第一个插件：从加载到注册工具"
+crumb: "第一个插件"
+description: "用一个最小插件验证加载，再打包成 bundle 安装进 profile，最后按官方 cookbook 注册一个模型可调用的工具。"
+answer: "最小插件只需导出 name 与 apply()。先用 --patch 覆盖层确认日志出现 plugin loaded，再打包成 bundle 用 dsh plugin add 安装。注册工具还需要 @deepseek-ai/dsh-tools。"
+updated: "2026-10-27"
+verified:
+  dsh: "0.2.1-rc.2"
+  npm_latest: "0.2.1-rc.2"
+  npm_next: "0.2.1-rc.4"
+  gh_tag: "dsh-v0.2.1-rc.3"
+  date: "2026-10-27"
+  os: ["windows", "macos"]
+difficulty: "advanced"
+keywords: ["deepseek harness 插件开发", "dsh 插件 教程", "dsh-plugin"]
+related: ["plugins/install", "install/source"]
+---
+
+## 插件最小结构
+
+一个 dsh 插件就是一个导出 `apply` 函数的模块。框架加载时调用 `apply`，把 `ctx` 传进来；你通过 `ctx` 注册工具、事件或其他能力。
+
+```js
+export const name = 'hello-plugin';
+
+export function apply() {
+  console.log('[hello-plugin] plugin loaded!');
+}
+```
+
+就这么多。没有构建步骤，没有必须继承的类，也不需要先注册什么清单。仓库里的可运行版本在 `examples/01-hello-plugin/index.js`。
+
+## 用 patch 加载（实测）
+
+开发阶段用 `--patch` 覆盖层加载最省事。建一个 `hello.patch.yml`，`name` 必须写绝对路径：
+
+```yaml
+- insert:
+    - id: hello
+      name: '/absolute/path/to/dsh-handbook/examples/01-hello-plugin/index.js'
+```
+
+启动：
+
+```bash
+dsh web --patch ./hello.patch.yml
+```
+
+启动日志里出现下面这行，就说明插件被加载了：
+
+```text
+[hello-plugin] plugin loaded!
+```
+
+2026-10-27 在 Windows 上实测：使用 `npx @deepseek-ai/dsh@0.2.1-rc.2 web --patch ... --no-open`，7 秒后打印加载日志。
+
+> patch 里的路径不会被解析成相对于 patch 文件；写成相对路径会找不到模块。用 `pwd` 打印当前目录，再拼绝对路径。
+
+## 打包成 bundle 并安装（实测）
+
+要让别人也能安装，把它做成组合包。目录结构：
+
+```text
+01-hello-plugin/
+├─ package.json
+├─ cordis.patch.yml
+└─ index.js
+```
+
+`package.json` 的关键是 `dsh.bundle` 与 `engines.dsh`：
+
+```json
+{
+  "name": "dsh-plugin-hello",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "index.js",
+  "files": ["index.js", "cordis.patch.yml"],
+  "license": "MIT",
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
+  "engines": { "dsh": ">=0.2.0 <0.3.0" }
+}
+```
+
+`cordis.patch.yml` 按包名引用自己，而不是源码路径：
+
+```yaml
+- insert:
+    - id: hello
+      name: dsh-plugin-hello
+```
+
+安装到一个测试 profile：
+
+```bash
+dsh plugin --profile hello add ./examples/01-hello-plugin
+dsh --profile hello --dump-config
+```
+
+实测输出：profile 初始化成功，`dsh-plugin-hello` 以链接方式加入，`--dump-config` 里能看到这个 bundle；用 `dsh --profile hello web --no-open` 启动，6 秒后打印加载日志。
+
+注意：`dsh plugin` 依赖 pnpm。本机没有 pnpm 时会直接报“不是内部或外部命令”，见 [插件安装与排错](/plugins/install/#命令行dsh-plugin-add)。
+
+## 注册一个工具
+
+工具插件在 `apply` 里调用 `ctx.tools.register`，并用 `defineTool` 描述参数与输出。下面这段来自官方 `adding-a-tool` 文档：
+
+```ts
+import type { Context } from '@deepseek-ai/cordis';
+import { defineTool } from '@deepseek-ai/dsh-tools';
+
+export const name = 'greet-tool';
+export const inject = ['tools'];
+
+export function apply(ctx: Context) {
+  ctx.tools.register(defineTool({
+    name: 'greet',
+    description: 'Greet someone by name.',
+    parameters: {
+      name: { type: 'string', required: true, description: 'The name to greet' },
+    },
+    output: {
+      schema: { type: 'string' },
+      render: (_args, value) => [{ type: 'text', text: value }],
+    },
+    async execute(args) {
+      return `Hello, ${args.name}!`;
+    },
+  }));
+}
+```
+
+三个要点：
+
+- `inject = ['tools']`：等工具注册表就绪后再加载插件。
+- `parameters` 会被用来校验模型生成的参数，`execute` 里拿到的 `args` 是类型化的。
+- `output.render` 决定工具结果怎么呈现给模型；返回值必须是 `output.schema` 声明的规范值。
+
+**核验状态：** 最小加载与 bundle 安装已实测；工具注册代码按官方 cookbook 编写，本页没有完成“带模型 Key 调用 greet 工具”的端到端验证。工具版还需要让包依赖 `@deepseek-ai/dsh-tools`，具体包结构以官方文档为准。
+
+## 发布到 npm 与 GitHub
+
+1. 包名用 `dsh-plugin-` 前缀或带作用域，`package.json` 保留 `dsh.bundle` 与 `engines.dsh`。
+2. `files` 只放运行需要的文件，不要把测试和本地配置发上去。
+3. 发布前在干净的 profile 里装一遍验证。
+4. GitHub 仓库加 `dsh-plugin` topic，方便别人发现。
+5. 不把 API Key、cookie、个人路径写进仓库。
+
+## 下一步读什么
+
+- 官方开发教程：[第一个插件](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/index.zh.md)
+- 工具编写参考：[adding-a-tool](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cookbook/adding-a-tool.zh.md)
+- 插件安装与报错：[插件安装与排错](/plugins/install/)

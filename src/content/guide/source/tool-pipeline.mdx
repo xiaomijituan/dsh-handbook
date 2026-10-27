@@ -1,0 +1,243 @@
+---
+title: "一次工具调用要过哪些关卡"
+crumb: "工具流水线"
+description: "从 createExecution() 到 tools/result，逐段读 dsh 的工具执行流水线：策略、审批、单调守卫、环绕分发、内容投影、后置策略与最终冻结。"
+answer: "顺序是 createExecution → tools/pre-execute → approval（仅 ask）→ 单调 guards → tools/execute → 工具正文 → projectContent → tools/post-execute → finalizeContent → tools/result。拒绝和失败也是结果，不是异常。"
+updated: "2026-10-27T14:00:00+08:00"
+verified:
+  dsh: "0.2.1-rc.2"
+  npm_latest: "0.2.1-rc.2"
+  npm_next: "0.2.1-rc.4"
+  gh_tag: "dsh-v0.2.1-rc.3"
+  date: "2026-10-27"
+  os: ["windows", "macos", "linux"]
+difficulty: "advanced"
+keywords: ["deepseek harness 工具调用", "dsh tools 源码", "dsh 权限 审批", "dsh post-execute"]
+related: ["source/message-lifecycle", "source/plugin-tree", "troubleshooting"]
+faq:
+  - q: "deny 和工具抛错有什么区别？"
+    a: "deny 是策略给出的正常结果，会变成 isError 的工具结果，模型看得到并能纠正；工具抛错也会被收敛成 isError，但仍会进入 post-execute。两者都不是把 agent loop 炸掉的异常。"
+  - q: "guards 和 pre-execute 监听器有什么区别？"
+    a: "pre-execute 是可扩展的 waterfall，可以 allow、deny、ask 或 cancel；guards 是它之后的单调检查，只能返回拒绝理由或弃权，不能强制放行别的 guard 已拒绝的调用。"
+  - q: "finalizeContent 在什么情况下运行？"
+    a: "每次规范化结果在物化之前都会运行一次，包括 pre-execute 抛错等跳过 post-execute 的管线失败。它在调用开始时被快照，契约要求同步、只改内容、不要抛异常。"
+  - q: "tools/result 和 tool/result 是同一个东西吗？"
+    a: "不是。tools/result 是注册表发出的同步观察事件，参数是冻结后的执行对象和结果；tool/result 是 agent loop 追加到 Session 日志的持久事件，模型下一轮从日志里看到它。"
+---
+
+模型发出一句 `tool call` 之后，真正执行它的不是工具函数本身，而是 `ctx.tools` 注册表。注册表先给这次调用拍一张不可变的参数快照，然后依次过策略、审批、单调守卫、环绕分发、工具正文、内容投影、后置策略和最终冻结。
+
+任何一步的拒绝或失败都会变成一个模型能读到的结果，而不是把循环炸掉。这是 dsh 工具流水线最重要的设计选择：**错误是数据，不是控制流异常。**
+
+<figure class="figure">
+  <a href="/diagrams/tool-pipeline.png" target="_blank" rel="noopener" title="点击查看大图"><img src="/diagrams/tool-pipeline.png" alt="dsh 工具流水线流程图：tool call 进入 createExecution，经过 pre-execute、approval、monotonic guards、execute 与工具正文，再经过 project 与 post-execute、finalizeContent，最后写入 tool/result 日志" width="2478" height="1336" loading="lazy" decoding="async" /></a>
+  <figcaption>图 1：一次工具调用在主路径上的关卡顺序；红色是拒绝分支，紫色是写入 Session 日志的事件。<a href="/diagrams/tool-pipeline.html" target="_blank" rel="noopener">打开交互版</a>（图可点开看大图）</figcaption>
+</figure>
+
+## 源码坐标
+
+| 位置 | 读什么 |
+|---|---|
+| [`tools/src/index.ts:1399-1492`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1399-L1492) | `createExecution()`：参数快照、token/callId、捕获 finalizer |
+| [`tools/src/index.ts:1501-1548`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1501-L1548) | `prepareExecution()`：pre-execute、ask 解析、guard 检查 |
+| [`tools/src/index.ts:1735-1775`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1735-L1775) | `serviceAsk()`：审批结果如何映射成 allow/deny |
+| [`tools/src/index.ts:1144-1162`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1144-L1162) | `guard()` 与 `guardReason()`：单调守卫的注册与检查 |
+| [`tools/src/index.ts:1609-1641`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1609-L1641) | `dispatchScheduledExecution()`：`tools/execute` 环绕与结果规范化 |
+| [`tools/src/index.ts:1572-1600`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1572-L1600) | `dispatchToolBody()`：调用注册的工具正文 |
+| [`tools/src/index.ts:1649-1671`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1649-L1671) | `finalizeScheduledExecution()`：projectContent 在 post-execute 之前 |
+| [`tools/src/index.ts:1789-1811`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1789-L1811) | `postExecute()`：accept、block、替换内容、附加上下文 |
+| [`tools/src/index.ts:1677-1725`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1677-L1725) | `finishScheduledExecution()`、`applyFinalContent()`、`notifyResult()` |
+| [`tool-calls.ts:60-113`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/tool-calls.ts#L60-L113) | agent loop 的工具调度：屏障、滚动池、模型顺序提交 |
+| [`tool-calls.ts:264`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/tool-calls.ts#L264) | 执行前写 `tool/call` |
+| [`tool-calls.ts:282`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/tool-calls.ts#L282) | 按模型顺序写 `tool/result` |
+
+## 先看一张顺序表
+
+| 顺序 | 阶段 | 代码入口 | 产出 |
+|---|---|---|---|
+| 1 | 拍参数快照 | `createExecution()` | 冻结的参数、callId、捕获的 finalizer |
+| 2 | 前置策略 | `tools/pre-execute` | allow / deny / ask / cancel |
+| 3 | 审批 | `serviceAsk()` | allowed-once / rejected / cancelled / unavailable |
+| 4 | 单调守卫 | `guardReason()` | 拒绝理由或弃权 |
+| 5 | 环绕分发 | `tools/execute` | 规范化结果，或取消 |
+| 6 | 工具正文 | `execute()` | 工具自己的 canonical 值 |
+| 7 | 内容投影 | `projectContent()` | 执行准备好的 content |
+| 8 | 后置策略 | `tools/post-execute` | accept / block / 替换 / 附加上下文 |
+| 9 | 最终冻结 | `finalizeContent()` → `tools/result` | 不可变结果 + 同步通知 |
+
+顺序是写死在注册表里的，事件只能改每一步的决策或内容，不能改关卡的先后。
+
+## createExecution：先把参数钉死
+
+`createExecution()` 做的第一件事，是对模型给的参数做 `snapshotJsonValue()`，再 `deepFreeze()`。如果参数不能无损地 JSON 往返，直接抛 `TypeError`，调用在进入策略之前就失败。这个选择保证后面所有监听器看到的都是同一份不可变参数，不会出现“审批时看到的参数”和“工具执行时收到的参数”不一致。
+
+它还在参数物化之前捕获 `projectContent` 和 `finalizeContent`。原因是参数可能是一个 getter，物化过程本身可以触发副作用，甚至换掉注册表里的回调；先捕获，才能保证这次调用用的是调用开始时的契约。`callId` 和 token 也在这一步生成，作为这次调用的稳定身份。
+
+PTC 模式有一个例外：如果某个工具在当前 scope 里被折叠成只能从 `run_code` 程序里调用，而模型直接调用了它，注册表会在策略之前就拒绝。这个拒绝不会让 `tools/pre-execute`、审批或守卫看到一个注定失败的调用。它仍然是一个规范的错误结果，而不是异常。
+
+## pre-execute：唯一的扩展闸门
+
+`tools/pre-execute` 是 waterfall。监听器收到 `(exec, next)`，可以：
+
+- 不调用 `next()`，直接返回 `deny`、`ask` 或 `cancel`；
+- 调用 `next()` 委托给下游，再包装返回值。
+
+`next()` 的默认值是 `allow`。监听器如果只观察、不决策，必须调用 `next()`；否则它会静默短路整条流水线。这是 waterfall 与普通事件最容易混淆的地方。
+
+异步监听器必须观察 `exec.signal`。注册表会在它们 settle 之后重新检查取消，但不会抛弃一个已经开始的 Promise；也就是说，取消不会硬杀同进程代码，只会让最终结果带上取消语义。
+
+如果决策是 `ask`，注册表调用 `serviceAsk()`。如果决策是 `deny`，它不会立刻 throw，而是生成一个 `isError` 的 `post-result`，继续走后面的投影和后置策略。`deny` 跳过的是工具正文，不是整条收尾链。
+
+## approval：ask 才进入
+
+`serviceAsk()` 把审批结果映射成四种情况：
+
+- `allowed-once`：这一次调用放行。
+- `rejected`：用户拒绝，转成 `deny`。
+- `cancelled`：审批取消，转成 `deny`，并标记 `approvalCancelled`。
+- `unavailable`：没有审批通道，转成 `deny`，理由是“需要审批但通道不可用”。
+
+默认拒绝是这里的安全边界：没有通道时，`ask` 不会悄悄变成 `allow`。审批只解析一次，结果随后交给守卫；守卫仍然可以否决一个已经获批的调用。
+
+## guards：只能否决
+
+`guard()` 注册的是同步函数：返回字符串表示拒绝理由，返回 `undefined` 表示弃权。检查顺序是全局层先、然后按 scope 链从远到近。任何一个 guard 返回理由，调用就被拒绝；没有任何 guard 能强制放行另一个 guard 已经拒绝的调用。
+
+“单调”是这层的核心。它保护的是不该被后续策略覆盖的不变量，例如“先读后编辑”这类所有者策略。`pre-execute` 是可扩展的、可以 ask 的；guards 是它之后的确定性检查，不参与审批，也不接受 `next()`。如果 `pre-execute` 已经 deny，guards 根本不会运行；只有 `allow` 的调用才进入 `guardReason()`。
+
+## execute：环绕分发
+
+`tools/execute` 是环绕 waterfall：监听器拿到 `(exec, next)`，可以包住真正的分发。超时、重试、指标这类关注点适合放在这里；工具 schema 里的 `timeoutMs` 就是由 `dsh-tool-call-timeout-policy` 这个 `tools/execute` wrapper 执行的，而不是硬编码在注册表里。
+
+wrapper 只能改 `exec.signal`，不能改调用身份。注册表会在进入工具正文之前，把调用方原始 signal 重新融合回来，所以 wrapper 换 signal 不能切断调用方的取消。wrapper 还必须让自己的工作在返回前达到静止；注册表不会抛弃已经开始的 Promise。
+
+`dispatchToolBody()` 调用注册的 `execute()`。如果工具正文开始后调用方取消，正文仍会跑到静止，最后结果由取消状态决定是 `ABORTED` 还是 `ABORTED_BEFORE_DISPATCH`。这个区分让模型知道“工具没开始”还是“工具做了一半”。
+
+## projectContent：执行后的内容准备
+
+结果从正文返回后，`finalizeScheduledExecution()` 先调用 `projectContent`，再调用 `postExecute`。顺序不能反：投影是工具自己声明的“执行准备好的内容”，后置策略要看到投影后的结果。
+
+`projectContent` 的返回值只替换 `content`，其他字段仍由注册表拥有。策略在 post-execute 里的替换仍然有最终决定权；如果管线失败、跳过了 post-execute，投影也不会运行。
+
+这个回调在调用开始时被快照，每次调用只运行一次。它不是通用的结果钩子，而是工具定义自己的内容准备步骤。
+
+## post-execute：接受、改写或阻止
+
+`tools/post-execute` 也是 waterfall。监听器可以返回：
+
+- `accept`：保留成功结果，可以替换 `content` 或 `value`，但不能同时替换两者；
+- `block`：把结果变成 `isError`，`feedback` 成为模型看到的内容；
+- `additionalContexts`：把额外的用户消息附加到结果上，供 agent loop 注入下一批。
+
+工具抛出的错误也会到达这里。注册表先把异常收敛成规范的 `isError` 结果，再交给 post-execute；所以后置策略既能修正成功结果，也能修正失败结果。
+
+拒绝（`deny`）同样会走 post-execute。工具正文没有运行，但投影和后置策略仍会看到这个 `isError` 结果；这给策略一个统一的地方去纠正或补充拒绝理由。
+
+`additionalContexts` 的生命周期有一个细节：工具正文通过 `deferContext()` 延迟的上下文，在结果被 accept 时会保留；如果外层调用被 block，延迟上下文会被丢弃，只保留 block 决策自己显式给出的上下文。这样 block 不会把一个失败调用的副作用带进下一轮。
+
+## finalizeContent 与 tools/result
+
+`finishScheduledExecution()` 的顺序是：
+
+1. 物化候选结果；
+2. 应用 `finalizeContent`；
+3. 再物化一次；
+4. `notifyResult()` 发出 `tools/result`。
+
+`finalizeContent` 是工具定义的最后一道内容变换。它在调用开始时被快照，每次调用恰好运行一次，包括跳过 post-execute 的管线失败。契约要求它同步、只改内容、不要抛异常；如果它还是抛了，注册表会把失败收敛成 `isError`，不会让观察者收到半截结果。
+
+`notifyResult()` 先 `Object.freeze(exec)`，再把冻结的执行对象和结果发给 `tools/result` 观察者。观察者是 `emit`，不是 waterfall；它们不能改写结果，抛错也只会被记录，不会影响最终返回。这让遥测、日志和 UI 可以安全地旁路观察。
+
+注意区分两个名字：
+
+- `tools/result`：注册表发出的同步观察事件，参数是冻结后的执行对象和结果。
+- `tool/result`：agent loop 追加到 Session 日志的持久事件，模型下一轮从日志里看到它。
+
+前者是进程内的通知，后者是模型可见的历史。
+
+## agent loop 怎么记录
+
+`executeToolCalls()` 在 agent loop 这一侧调度工具。它先按 `executionMode` 分类：独占调用形成屏障，可并行的调用进入有界滚动池；每次启动前重新分类，所以注册表在运行中变化时，新出现的独占调用会形成新屏障。
+
+`startCall()` 的顺序是：先 `appendToolCall()` 写 `tool/call`，再 `prepare()`，再 `dispatch()`。也就是说，只要调用开始准备，日志里就先有一条 `tool/call`；即使后面被拒绝或失败，模型也能看到这次调用的存在。
+
+结果按模型发出的顺序提交 `tool/result`，即使实际执行是并发的。某个 step 失败时，`turn()` 的恢复逻辑会把已经结算但还没提交的工具结果补写进日志，避免出现“工具跑了但模型没看到”的缺口。
+
+## 自己验证
+
+不需要模型 Key。先确认 Web profile 的 `tools` 行确实被 web-app 重写过：
+
+```bash
+dsh --profile web --dump-config | grep -A6 "id: tools"
+```
+
+预期能看到：
+
+```yaml
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+  config:
+    mode: !!js process.env.DSH_TOOLS_MODE
+```
+
+`mode` 来自 `web-app` 的 patch，`!!js` 表达式在 Loader 激活时求值；dump 里保留原文。
+
+再确认四个流水线事件的位置：
+
+```bash
+grep -n "'tools/pre-execute'\|'tools/execute'\|'tools/post-execute'\|'tools/result'" \
+  packages/core/tools/src/index.ts
+```
+
+在 `dsh-v0.2.1-rc.3` 上，预期是第 154、165、177、199 行。行号会随版本移动，函数名和事件名更稳定。
+
+想观察真实调用，可以装一个只读的钩子插件：
+
+```bash
+# 需要 pnpm
+dsh plugin --profile pipeline add ./examples/02-pipeline-hook
+dsh --profile pipeline --dump-config | tail -4
+```
+
+预期输出：
+
+```yaml
+# == dsh-plugin-pipeline-hook
+- id: pipeline-hook
+  name: dsh-plugin-pipeline-hook
+```
+
+启动这个 profile：
+
+```bash
+dsh --profile pipeline web --no-open
+```
+
+不需要模型 Key，终端就会出现：
+
+```text
+[pipeline-hook] loaded; observing tools/pre-execute, tools/post-execute, tools/result
+```
+
+这一行证明 `inject: ['tools']` 已经等到工具服务，插件成功挂载。有 Key 并触发一次工具调用时，还会依次出现 `pre-execute`、`post-execute`、`result` 三行；钩子只打印并调用 `next()`，不改写任何决策。本次核验只验证到 `loaded` 这一行，带 Key 的三行没有实跑，文章不把它写成已观测。
+
+想离线确认插件是否进入 profile，用 `dsh --profile pipeline --dump-config`，输出末尾会出现 `dsh-plugin-pipeline-hook`。
+
+## 四个常见误解
+
+**“deny 会抛异常。”** 不会。`deny` 是一个正常的 `isError` 结果，继续走投影和后置策略，模型看得到并能纠正。真正抛异常的是监听器或管线本身；注册表会把它们收敛成 `isError`，而不是让 agent loop 崩掉。
+
+**“post-execute 只看到成功的工具。”** 不是。工具抛出的错误也会被规范化后送进 post-execute；后置策略可以修正失败结果。
+
+**“finalizeContent 只在成功时跑。”** 不是。每次规范化结果在物化前都会跑一次，包括跳过 post-execute 的管线失败。它在调用开始时被快照，契约要求同步、只改内容、不要抛。
+
+**“guard 可以放行被别的 guard 拒绝的调用。”** 不能。guards 是单调的：任何一个返回理由就拒绝，没有强制放行。需要审批或可协商的策略，应该放在 pre-execute，而不是 guard。
+
+## 官方文档对应位置
+
+- [工具执行流水线](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/tool-execution-pipeline.zh.md)：策略、守卫、审批、结果重写与最终观察
+- [tools README](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/README.zh.md)：注册、调度、取消与结果契约
+- [架构总览：事件](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)：会话事件、Agent 事件与能力事件的分工
+- [安全边界](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/SAFETY.md)：沙箱、审批与信任模型
+
+上一篇：[一条消息怎样变成一个步骤](/source/message-lifecycle/)。如果还没读插件树，建议先看[一切皆插件](/source/plugin-tree/)，那里解释了 `ctx.tools` 这个服务是怎么被挂载出来的。

@@ -1,0 +1,230 @@
+---
+title: "一条消息怎样变成一个步骤：dsh 的 turn/step 生命周期"
+crumb: "消息生命周期"
+description: "沿着 ReactLoopAgent.turn() 与 step() 读一遍：消息如何进入 inbox、pre-step 如何决定接纳、system/user 消息何时写日志、请求如何冻结、工具结果如何结算。"
+answer: "一个轮次包含零个或多个步骤。每一步：领取输入 → agent/pre-step → 组装提示词 → prepareCall → 写 system/user 消息 → 冻结请求 → 流式返回 → 执行工具 → 写 tool/result → step/end；轮次末尾写 turn/end。"
+updated: "2026-10-27T14:00:00+08:00"
+verified:
+  dsh: "0.2.1-rc.2"
+  npm_latest: "0.2.1-rc.2"
+  npm_next: "0.2.1-rc.4"
+  gh_tag: "dsh-v0.2.1-rc.3"
+  date: "2026-10-27"
+  os: ["windows", "macos", "linux"]
+difficulty: "advanced"
+keywords: ["deepseek harness agent loop", "dsh turn step", "dsh inbox", "dsh 源码"]
+related: ["source/plugin-tree", "source/tool-pipeline", "plugins/install"]
+faq:
+  - q: "turn 和 step 有什么区别？"
+    a: "turn 是一次连续工作：从领取首条输入开始，到不再欠任何工作结束；一个 turn 可以包含零个或多个 step。step 是一次模型请求加上它调用的工具。"
+  - q: "为什么重试不会重复写用户消息？"
+    a: "重试发生在仍打开的 step 内。step() 里的 firstAttempt 只在第一次尝试时接纳用户消息；后续重试复用同一份 assembly，不重新跑 agent/pre-step，也不重复写 user/message。"
+  - q: "assistant/message 和 assistant/attempt 有什么区别？"
+    a: "assistant/message 是一次成功结算，会进入派生历史；assistant/attempt 记录失败、重试、取消或 stream error 的已到达结算，不添加模型历史。被中断但已有内容的流可以结算成带 interrupted 标记的 assistant/message。"
+  - q: "回放 transcript 应该读哪一路事件？"
+    a: "读 session/event 里的持久事件。agent/assistant-stream 是进程本地的实时 chunk，不用于回放；持久结算在 assistant/message 或 assistant/attempt 里。"
+---
+
+一次模型请求不是从 `fetch` 开始的，而是从一条消息被放进 inbox 开始的。`ReactLoopAgent` 把工作分成轮次和步骤：轮次打开后，循环领取输入、过 pre-step、组装提示词、准备调用、写日志、冻结请求、流式读取、调度工具，最后关闭步骤和轮次。
+
+这条路径里最容易混淆的，是“持久事实”和“实时控制”混在一起看。下面的图只画一条消息走完一个步骤的主路径；策略分支、工具内部的关卡留给下一篇。
+
+<figure class="figure">
+  <a href="/diagrams/message-lifecycle.png" target="_blank" rel="noopener" title="点击查看大图"><img src="/diagrams/message-lifecycle.png" alt="dsh 消息生命周期时序图：用户 followup 进入 Inbox，ReactLoopAgent 依次经过 agent/pre-step、system-prompt/assemble、prepareCall、写 system 与 user 消息、冻结请求、流式返回、工具调用，最后写 step 与 turn 的结束事件" width="2150" height="1386" loading="lazy" decoding="async" /></a>
+  <figcaption>图 1：一条消息从 inbox 到 turn/end 的时序；紫色虚线是写入 Session 日志的持久事件，绿色箭头是主路径请求。<a href="/diagrams/message-lifecycle.html" target="_blank" rel="noopener">打开交互版</a>（图可点开看大图）</figcaption>
+</figure>
+
+## 源码坐标
+
+| 位置 | 读什么 |
+|---|---|
+| [`agent.ts:298-399`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L298-L399) | `turn()`：turn/start、pre-step、step 循环、turn-stopping、turn/end |
+| [`agent.ts:267-289`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L267-L289) | `preStep()`：调用 `agent/pre-step`，拿到 reject 或 enter |
+| [`agent.ts:400-441`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L400-L441) | `step()` 前半：渲染提示词、提交系统消息、接纳用户消息 |
+| [`agent.ts:564-615`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L564-L615) | `prepareRequest()`：`agent/request` 与 `llm.prepareCall()` |
+| [`agent.ts:616-700`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L616-L700) | `buildRequest()`：request/header、request/context、冻结请求 |
+| [`inbox.ts:109-113`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/inbox.ts#L109-L113) | `claim()`：next-step 与 next-turn 的领取规则 |
+| [`system-prompt/src/index.ts:20-32`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/system-prompt/src/index.ts#L20-L32) | `system-prompt/assemble` waterfall |
+| [`tool-calls.ts:60-113`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/tool-calls.ts#L60-L113) | `executeToolCalls()`：屏障、滚动池、按模型顺序提交 |
+| [`session/src/index.ts:984-1011`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/session/src/index.ts#L984-L1011) | `deriveMessages()`：从日志折叠模型历史 |
+| [`llm/src/index.ts:956-964`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/llm/llm/src/index.ts#L956-L964) | `prepareCall()`：绑定适配器与调用能力 |
+
+## 先分清三个边界
+
+| 概念 | 边界 | 记录在哪 |
+|---|---|---|
+| 轮次 turn | 从领取首条输入开始，到不再欠工作结束 | `turn/start`、`turn/end` |
+| 步骤 step | 一次模型请求，加上它调用的工具 | `step/start`、`step/end` |
+| 持久事实 | 模型见过什么、工具返回了什么 | `session/event` 里的 `user/message`、`assistant/message`、`tool/result` 等 |
+| 实时控制 | 队列、状态、请求拦截、steering | `agent/*` 事件，不用于回放 |
+
+一个 turn 可以有零个 step。比如第一次 `agent/pre-step` 就把领取到的消息全部拒掉，或者改写成空数组，turn 仍然会打开和关闭，但不会发模型请求，也不会写 `step/start`。这一点在 `turn()` 里写得很明确：`phase.step === 0 && decision.messages.length === 0` 时直接以 `completed` 结束。
+
+## turn() 的主循环
+
+`turn()` 从 `agent.ts:298` 开始，骨架是一个 `while (true)`：
+
+1. 追加 `turn/start`。
+2. 计算下一个 step 号，调用 `preStep(target, { turn, step })`。
+3. 如果决策是 `reject`，把 `turnEnds` 设为 `blocked`，不进入 step。
+4. 如果这是首轮且 `messages` 为空，把 `turnEnds` 设为 `completed`，不进入 step。
+5. 追加 `step/start`，调用 `step(decision)`。
+6. 在 `finally` 里追加 `step/end`，即使 `step()` 抛错也要写。
+7. 如果自然停止且 `nextStep` 为空，跑一次 `agent/turn-stopping` 串行检查点。
+8. 如果还有 `nextStep` 输入，继续下一个 step。
+9. 在 `finally` 里追加 `turn/end`，带上 `turnEnds`。
+
+伪代码压成一行是：
+
+```text
+turn/start
+  loop:
+    pre-step → reject/enter
+    step/start
+      … 模型请求与工具 …
+    step/end
+    turn-stopping（自然停止时）
+  turn/end
+```
+
+`turn/end` 的 `reason` 由 `turnEnds` 决定：`completed`、`blocked`、`max-tokens`、`aborted`、`error`。`max-tokens` 是粘性的：某一步撞到上限后，后面正常完成的步骤不能把它降级成 `completed`。
+
+## inbox：两个队列，不是一个大池子
+
+Inbox 里有两个队列：`next-step` 和 `next-turn`。`claim(target, turn)` 的行为是：
+
+- 取走整个 `next-step` 数组；
+- 如果 `target === 'next-turn'`，再取走一条 `next-turn` 消息；
+- 对取走的每条消息发一个 `agent/inbox/claimed` 实时事件。
+
+`next-step` 的消息会加入当前 turn 的下一个 step；`next-turn` 的消息只在当前 turn 结束后开启新 turn。这个区分解决了一个具体问题：你在模型回答途中补一句话，应该影响下一步，而不是另起一轮；你在它空闲时排一条新任务，才应该新开一轮。
+
+Inbox 的变更会以 `agent/inbox/spliced` 写进 Session 日志。恢复 Session 时，pending 输入由这些 splice 事件重新折叠出来，所以“队列里有几条消息”不是只存在内存里的状态。注入的上下文（`agent.inject()`）不会单独唤醒 loop，它等一条唤醒消息一起进入下一次认领。
+
+## pre-step：准入闸门
+
+`preStep()` 在 `agent.ts:267`，它把领取到的消息连同 `{ turn, step, signal }` 交给 `agent/pre-step` waterfall。监听器可以做两件事：
+
+- 返回 `reject`：当前 turn 以 `blocked` 结束，不进入 step。
+- 返回 `enter`：带上最终要接纳的 `messages`，可以改写、增删，也可以设置 `startsRequestSeries`。
+
+`startsRequestSeries` 是一个容易被包装监听器弄丢的字段。它告诉 loop：这次 enter 要开启一个新的请求序列，需要记录新的 `request/header`。如果包装监听器用 `{ ...decision, messages }` 重建决策，要记得把 `startsRequestSeries` 一起带上；否则新序列的标记会被静默丢掉。
+
+压缩（compaction）也挂在这个事件上。`dsh-compaction-basic` 在派生请求之前通过 `agent/pre-step` 处理上下文压力；恢复时仍在同一个打开的 step 内，只有剪枝或摘要推进了 surface replacement generation，才会重试。这段行为在[架构总览的轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)里有完整说明。
+
+## 组装提示词：一次，重试复用
+
+进入 step 后，`step()` 先调用 `renderPrompt(assembly)`，把系统提示词、上下文和工具 schema 渲染成文本。`assembly` 来自 pre-step 之前的 `system-prompt/assemble` waterfall；监听器可以修改共享的 assembly，但已注册的完整 section 会在 waterfall 之后被恢复，所以监听器不能替换整个系统提示词。
+
+这里的关键是“一次，重试复用”：`renderedPrompt` 在 step 开始时算一次，后面的重试循环不会重新组装。重试只重新 `prepareRequest`，然后基于同一份 assembly 和同一份渲染结果重新提交必要的 `system/message`，不会重跑 `agent/pre-step`。
+
+## prepareCall：先绑定，再提交
+
+`prepareRequest()` 在 `agent.ts:564`，做两件事：
+
+1. 跑 `agent/request` waterfall，得到这次调用的 provider/model 配置。
+2. 调用 `llm.prepareCall(config, signal)`，让适配器提前绑定路由，拿到一个 prepared call。
+
+`prepareCall` 的返回值不只是“能 stream 的函数”。它还带着 `systemPromptUpdate`、`toolUpdate`、`retryPolicy` 和 `context` 等能力声明，后面的提示词提交和重试策略都依赖这些能力。
+
+顺序很重要：**先 prepare，再提交系统提示词和用户消息。** 如果 prepare 抛错，或者在 prepare 期间取消，系统提示词和用户消息都不会写进日志。这样就不会出现“日志里有一条用户消息，但模型从没收到请求”的半截状态。这个顺序在 `step()` 和 `prepareRequest()` 的注释里被反复强调。
+
+## 写日志：模型可见即已记录
+
+`buildRequest()` 在 `agent.ts:616`，它按需追加这些事件：
+
+- `system/message`：系统提示词的提交，带 surface intent；
+- `user/message`：本次接纳的用户消息，`runtime-context` 会延后到第一次上下文需要时再写；
+- `request/header`：请求信封，`reason` 是 `initial`、`resume`、`change` 或 `series`；
+- `developer/message`：工具增删时写给模型的提示，带 `headerSeq`；
+- `request/context`：provider、model、上下文窗口或提示词更新能力发生变化时写。
+
+然后它调用 `deriveMessages()`，从日志里折叠出模型历史，逐条 `deepFreeze`，再 `Object.freeze` 整个数组和请求对象。冻结之后，请求就是不可变的；任何插件都不能在发送途中改消息。
+
+这套顺序实现了“模型可见即已记录”：请求不是从局部变量拼出来的，而是从 Session 日志推导出来的。下一次恢复、fork 或重放，读同一份日志就能得到同一份历史。
+
+`system/message` 的处理比“追加一条消息”复杂。提示词可能按版本替换、在缓存前缀之后追加更新，或者在不支持更新的路由上归并到首个系统节点。规则在[架构总览的轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)和 `packages/core/agent-loop/README.zh.md` 里；这篇文章只需要记住：提交发生在 buildRequest 之前，日志是唯一来源。
+
+## 流式结算：message 还是 attempt
+
+流式读取由 `AssistantStreamAttempt` 承载。它把 chunk 推给实时事件 `agent/assistant-stream`，同时记录一份紧凑 stream，等结算时写进持久事件。
+
+结算分几种情况：
+
+- 成功完成：写 `assistant/message`，嵌入紧凑 stream；如果内容为空（比如只返回 usage），派生历史会把它丢掉。
+- 撞到 `max-tokens`：仍然写 `assistant/message`，返回 `max-tokens`，后续步骤不能把 turn 降级成 `completed`。
+- 失败、重试、取消或 stream error，且没有 surface 内容：写 `assistant/attempt`，只留日志，不添加模型历史。
+- 取消时已经收到部分内容：写带 `interrupted: true` 的 `assistant/message`，把已到达的内容留下。
+
+失败结算之后，loop 会跑 `agent/request-error` waterfall。监听器可以返回重试动作；`dsh-compaction-basic` 就把它用于规范的上下文溢出。如果没有重试，原始错误继续抛给 turn，最终以 `error` 结束。
+
+实时 `agent/assistant-stream` 的 chunk 帧是瞬态数据。回放读的是 `assistant/message` 或 `assistant/attempt`；如果进程在结算前硬中断，不会留下持久的 attempt stream。
+
+## 工具调用：模型顺序提交
+
+如果 `assistant/message` 里含有 `tool-call` 块，`step()` 会调用 `executeToolCalls()`。它的调度规则是：
+
+- 独占调用形成屏障：屏障之前的调用必须全部结算，屏障之后的调用才能开始。
+- 可并行的调用使用有界滚动池，并在每次启动前重新分类；注册表在运行中变化时，新的独占调用会形成新的屏障。
+- 每个调用在 prepare/dispatch 之前先写 `tool/call`。
+- 结果按模型发出的顺序提交 `tool/result`，即使实际执行是并发的。
+
+工具返回的 `additionalContexts` 会通过回调 splice 到 `next-step` 队列里，作为活动批次的一部分，排在已记录的工具结果之后。这就是“工具说了一句话，模型下一轮能看到”的路径。
+
+工具内部的审批、守卫和失败分层，是下一篇的主题。
+
+## 日志怎样变成历史
+
+`deriveMessages()` 在 `session/src/index.ts:984`。它不复制日志，而是沿 surface 节点走一遍：
+
+- 只有 message-producing 事件会进入派生历史：`system/message`、`user/message`、`assistant/message`、`tool/result`，以及插件注册的消息投影。
+- 没有 surface 标记的原始事件（chunk、turn 边界）不会进入历史。
+- 压缩的 `replace` 会删掉被遮蔽的节点，派生历史随之重建。
+- 空内容的 `assistant/message` 派生为 `null`，不进入 transcript。
+- 尾部追加是增量的；只有 replacement 或消息投影变化时才整体重建。
+
+返回的数组每次都是新快照，但里面的 `Message` 对象是共享且深冻结的。消费方不能通过返回值改日志。
+
+## 自己验证
+
+不需要模型 Key。先确认 agent loop 确实以“空启动列表”挂载：
+
+```bash
+dsh --profile web --dump-config | grep -A6 "id: agent-loop"
+```
+
+预期输出：
+
+```yaml
+- id: agent-loop
+  name: '@deepseek-ai/dsh-agent-loop'
+  config:
+    agents: []
+```
+
+`agents: []` 表示 base 不在启动时创建 agent；Web 是在客户端请求时创建 Session，再由 Session 驱动 agent loop。这解释了为什么“启动后什么都没发生”是正常的。
+
+有模型 Key 时，可以进一步看真实日志：
+
+1. 启动 `dsh web`，发一条会调用工具的消息。
+2. 找到 `$DSH_HOME/sessions` 下的 Session 文件（可能是 JSONL 或压缩后的 JSONL）。
+3. 在日志里搜索 `turn/start`、`step/start`、`tool/call`、`tool/result`、`turn/end`。
+
+不需要解析每一行；先确认这些事件的出现顺序，再回到 `turn()` 和 `step()` 的源码对照。如果日志是 `.zstd` 压缩的，先解压再读，不要直接编辑原文件。
+
+## 三个常见误解
+
+**“一个 turn 一定有一次模型请求。”** 不一定。首轮 pre-step 拒绝或改写为空时，turn 会打开并关闭，但不进入 step，也不发请求。
+
+**“重试会重新跑 pre-step 和用户消息。”** 不会。重试在仍打开的 step 内，复用 assembly 和渲染结果，只重新 prepare 和提交必要的系统消息；用户消息由 `firstAttempt` 把关，不会重复。
+
+**“实时 stream 就是历史。”** 不是。实时 chunk 是瞬态事件；历史来自持久结算。SDK 用户要 transcript，应该消费 `session/event`；要队列和状态，才消费 `agent/*`。
+
+## 官方文档对应位置
+
+- [Agent 轮次与步骤生命周期](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/agent-lifecycle.zh.md)：时序图、事件清单、压缩与重试
+- [架构总览：轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)：turn、step、请求构建与系统提示词规则
+- [agent-loop README](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/README.zh.md)：实现顺序、取消与错误恢复
+- [session README](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/session/README.zh.md)：日志、派生历史与持久化
+
+下一篇进入工具内部：[一次工具调用要过哪些关卡](/source/tool-pipeline/)。

@@ -1,0 +1,99 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import AnswerBox from '../components/AnswerBox.astro';
+import VersionBadge from '../components/VersionBadge.astro';
+import Toc from '../components/Toc.astro';
+import FaqList from '../components/FaqList.astro';
+import { SITE_NAME } from '../consts';
+
+const { entry, headings } = Astro.props;
+const data = entry.data;
+const slugOf = (id: string) => id.replace(/\/index$/, '');
+const base = Astro.site ?? new URL('http://localhost:4321');
+const all = await getCollection('guide');
+const titleOf = (id: string) => all.find((e) => slugOf(e.id) === id)?.data.title ?? id;
+
+const slug = slugOf(entry.id);
+const segments = slug.split('/');
+const sectionLabels: Record<string, string> = { install: '安装', plugins: '插件', source: '源码', versions: '版本' };
+const crumbs = [
+  { label: '首页', href: '/' },
+  ...segments.map((segment, index) => ({
+    label: index === segments.length - 1 ? (data.crumb ?? data.title) : (sectionLabels[segment] ?? segment),
+    href: index === segments.length - 1 ? undefined : '/' + segments.slice(0, index + 1).join('/') + '/',
+  })),
+];
+
+const iso = new Date(data.verified.date).toISOString().slice(0, 10);
+const stale = Date.now() - new Date(data.verified.date).getTime() > 30 * 86400000;
+const pageUrl = new URL(Astro.url.pathname, base).href;
+
+const sectionImages: Record<string, string> = {
+  install: '/og/install.png',
+  plugins: '/og/plugins.png',
+  source: '/og/source.png',
+  versions: '/og/versions.png',
+};
+const section = segments[0];
+const image = sectionImages[section] ?? '/og/default.png';
+const imageAlt = sectionImages[section]
+  ? `${data.title} — ${sectionLabels[section] ?? section}篇`
+  : `${data.title} — ${SITE_NAME}`;
+
+const jsonLd: Record<string, unknown>[] = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: data.title,
+    description: data.description,
+    dateModified: iso,
+    inLanguage: 'zh-CN',
+    author: { '@type': 'Organization', name: 'dsh-handbook' },
+    mainEntityOfPage: pageUrl,
+    image: new URL(image, base).href,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map((crumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: crumb.label,
+      ...(crumb.href ? { item: new URL(crumb.href, base).href } : {}),
+    })),
+  },
+];
+if (data.faq.length > 0) {
+  jsonLd.push({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: data.faq.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: { '@type': 'Answer', text: item.a },
+    })),
+  });
+}
+---
+<BaseLayout title={data.title} description={data.description} noindex={data.noindex} keywords={data.keywords} jsonLd={jsonLd} image={image} imageAlt={imageAlt}>
+  <div class="container article-grid">
+    <article class="prose">
+      <Breadcrumbs items={crumbs} />
+      <h1>{data.title}</h1>
+      <VersionBadge verified={data.verified} />
+      <AnswerBox text={data.answer} />
+      {stale && <p class="stale-banner">这页的核验日期已超过 30 天，dsh 可能已经变化。以 <a href="/versions/">版本页</a> 与官方文档为准。</p>}
+      <slot />
+      {data.faq.length > 0 && <FaqList items={data.faq} />}
+      {data.related.length > 0 && (
+        <aside class="related">
+          <h2>接着读</h2>
+          <ul>{data.related.map((id) => <li><a href={`/${id}/`}>{titleOf(id)}</a></li>)}</ul>
+        </aside>
+      )}
+    </article>
+    <Toc headings={headings} />
+  </div>
+</BaseLayout>

@@ -1,0 +1,65 @@
+:root {
+  --paper: #f7f5ef;
+  --paper-raised: #fffdf8;
+  --ink: #101418;
+  --ink-soft: #46525e;
+  --ink-faint: #5f6b76;
+  --line: #ddd7ca;
+  --line-strong: #c4bcaa;
+  --accent: #2f5bd7;
+  --accent-ink: #ffffff;
+  --code-bg: #14181d;
+  --code-ink: #e7edf3;
+  --tip-bg: #e9f3ee;
+  --tip-line: #4f9d7a;
+  --warn-bg: #fff3d4;
+  --warn-line: #d3a53a;
+  --danger-bg: #fde9e6;
+  --danger-line: #cf6255;
+  --shadow-1: 0 1px 2px rgb(16 20 24 / 6%), 0 10px 30px rgb(16 20 24 / 5%);
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, "Liberation Mono", monospace;
+  --text-xs: 0.79rem;
+  --text-sm: 0.889rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.266rem;
+  --text-2xl: 1.424rem;
+  --text-3xl: 1.602rem;
+  --text-4xl: 1.802rem;
+  --text-5xl: 2.027rem;
+  --measure: 68ch;
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --header-h: 64px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0e1116;
+    --paper-raised: #151a21;
+    --ink: #e9eef4;
+    --ink-soft: #aab5c1;
+    --ink-faint: #7d8a97;
+    --line: #26303a;
+    --line-strong: #35414d;
+    --accent: #86a7ff;
+    --accent-ink: #0b1020;
+    --code-bg: #0a0e13;
+    --tip-bg: #10241c;
+    --warn-bg: #2a2210;
+    --danger-bg: #2a1513;
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 30%), 0 10px 30px rgb(0 0 0 / 25%);
+  }
+}

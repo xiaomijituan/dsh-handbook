@@ -1,0 +1,61 @@
+---
+title: "DeepSeek Harness 安装：三种方式怎么选"
+crumb: "安装选型"
+description: "桌面版、npx、源码三种安装方式的适用人群、前置条件与升级方式对比，含 2026-10-27 的实测记录。"
+answer: "只想用得省心就装桌面版；要在服务器、SSH 或脚本里跑用 npx；要改源码或开发插件走源码安装。三种方式都需要 DeepSeek API Key，npx 与源码还需要 Node。"
+updated: "2026-10-27"
+verified:
+  dsh: "0.2.1-rc.2"
+  npm_latest: "0.2.1-rc.2"
+  npm_next: "0.2.1-rc.4"
+  gh_tag: "dsh-v0.2.1-rc.3"
+  date: "2026-10-27"
+  os: ["windows", "macos"]
+difficulty: "beginner"
+keywords: ["deepseek harness 安装", "dsh 安装", "deepseek harness 桌面版"]
+related: ["install/desktop", "install/npx", "install/source"]
+---
+
+## 先做一个判断
+
+三种安装方式不是新旧关系，而是三种使用场景。
+
+| 你的情况 | 选这个 |
+|---|---|
+| 不想碰命令行，只想有个能用的界面 | [桌面版](/install/desktop/) |
+| 在服务器、SSH 或脚本里跑，或者只想临时试 | [npx](/install/npx/) |
+| 要改源码、开发插件、跟最新提交 | [源码](/install/source/) |
+
+如果只是第一次用，选桌面版。它把 Node、Web UI 和服务进程一起打包了，少一层环境问题。
+
+## 三种方式对比
+
+| 方式 | 适合谁 | 前置 | 升级方式 | 本站核验状态 |
+|---|---|---|---|---|
+| 桌面版 | 不写代码、不想管 Node | 操作系统版本、API Key | 重新下载安装包 | 下载地址与文件大小已核验；安装器未实测 |
+| npx | 有 Node 的开发者、服务器 | Node、网络、API Key | 重跑 npx | 启动、401 鉴权、端口占用已实测 |
+| 源码 | 插件开发者、贡献者 | Node、pnpm、Git、构建工具 | `git pull` + 重新安装构建 | 按官方 README 核对，未实测 |
+
+## 共同前置：API Key 与网络
+
+三件事在三种方式里都一样：
+
+1. **一个 DeepSeek API Key**：在 [DeepSeek 开放平台](https://platform.deepseek.com/) 创建。Key 是写进本机配置的，不要提交到 Git 仓库。
+2. **能访问安装源**：桌面版访问 `download.deepseek.com`，npx 与源码访问 npm registry 或 GitHub。
+3. **一个工作目录**：dsh 会把它当成默认文件系统位置。第一次启动后还要在界面里选工作区。
+
+## 装完怎么确认成功
+
+按顺序做三步，不要跳过：
+
+1. **页面能打开。** 桌面版会自动打开；npx 要用启动日志里带 `token` 的完整地址。
+2. **设置 → 模型里能看到 DeepSeek 卡片。** 填入 Key 并保存。
+3. **选工作区，新建会话，发一句话。** 没选工作区时，输入框不可用。
+
+> **看到 401 不等于安装失败。** `dsh web` 默认对裸地址 `http://127.0.0.1:3080/` 返回 401，必须使用启动时打印的 `?token=...` 地址。原因见 [npx 安装](/install/npx/#确认服务起来了)。
+
+## 下一步
+
+- 装完先配模型：[模型配置](/models/)
+- 装第一个插件：[插件安装](/plugins/install/)
+- 装不上或有报错：[故障排查](/troubleshooting/)

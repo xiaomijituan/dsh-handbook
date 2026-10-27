@@ -1,0 +1,13 @@
+# 内容许可
+
+本仓库 `src/content/` 下的正文采用 Creative Commons Attribution 4.0 International（CC BY 4.0）。
+
+你可以复制、转载、改编，但必须：
+
+- 署名 dsh-handbook
+- 附上原文链接
+- 说明是否做过修改
+
+许可全文：https://creativecommons.org/licenses/by/4.0/legalcode.zh-Hans
+
+代码、示例与配置文件采用 MIT 许可，见 `LICENSE`。

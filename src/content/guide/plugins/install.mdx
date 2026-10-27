@@ -1,0 +1,98 @@
+---
+title: "dsh 插件安装与排错：三种入口和一张症状表"
+crumb: "插件安装"
+description: "覆盖 Web UI、命令行与本地路径三种插件安装入口，解释 profile 与 pnpm 依赖，并给出装不上、装完不显示等问题的排查表。"
+answer: "三种入口：Web UI 的插件页、命令行 dsh plugin、以及本地路径安装。命令行必须能找到 pnpm；装完不显示多半是装进了别的 profile。"
+updated: "2026-10-27"
+verified:
+  dsh: "0.2.1-rc.2"
+  npm_latest: "0.2.1-rc.2"
+  npm_next: "0.2.1-rc.4"
+  gh_tag: "dsh-v0.2.1-rc.3"
+  date: "2026-10-27"
+  os: ["windows", "macos"]
+difficulty: "intermediate"
+keywords: ["deepseek harness 插件安装", "dsh 插件 报错", "dsh plugin"]
+related: ["plugins", "troubleshooting"]
+---
+
+## 三种安装入口
+
+| 入口 | 适合 | 依赖 |
+|---|---|---|
+| Web UI 插件页 | 日常安装、看得见状态 | 先打开带 token 的 Web UI 地址 |
+| 命令行 `dsh plugin` | 服务器、脚本、可复制记录 | 本机要有 pnpm |
+| 本地路径 | 开发中的插件 | 本机要有 pnpm |
+
+三条路最后都落到 profile 的依赖里，区别只是谁来执行安装。
+
+## 命令行：dsh plugin add
+
+`dsh plugin` 本身不实现安装，它把参数原样转发给 profile 目录里的 pnpm。
+
+```bash
+dsh plugin --profile web add <package>
+```
+
+安装后检查：
+
+```bash
+dsh plugin --profile web list
+```
+
+移除：
+
+```bash
+dsh plugin --profile web remove <package>
+```
+
+**实测坑：pnpm 必须先在 PATH 里。** 2026-10-27 在 Windows 上执行 `dsh plugin --profile web list`，因为本机没有 pnpm，命令直接失败：
+
+```text
+'pnpm' 不是内部或外部命令，也不是可运行的程序或批处理文件。
+dsh: plugin command failed; diagnostics: ...\.plugin-manager\logs\operation-...\pnpm.log
+```
+
+先装 pnpm，再重试。诊断信息里的 `pnpm.log` 会保留 pnpm 的原始输出，比 dsh 的汇总行更有用。
+
+## Web UI：插件页与发现
+
+打开 Web UI 后，左侧进入“插件”页。这里能看到已安装的组合包，并逐个开关。
+
+“发现”不是默认就有的。官方文档写明：DSH 不内置任何索引源；要在“发现”里浏览插件，得先打开“实验性插件”下的“自定义插件索引”，然后添加索引文件 URL。
+
+添加索引时注意：
+
+- URL 必须是 `http:` 或 `https:`，不能带用户名、密码或 `#` 片段
+- 优先 HTTPS；能改 `http:` 索引的人也能改它列出的安装来源
+- 索引是第三方内容，安装确认框里的来源要自己核对
+
+## 本地路径安装（开发用）
+
+本地开发插件时，直接把目录装进一个测试 profile：
+
+```bash
+dsh plugin --profile hello add ./examples/01-hello-plugin
+dsh --profile hello --dump-config
+```
+
+`--dump-config` 不需要模型 Key，能看到 profile 里是否多了你的插件。确认加载后再进主 profile，避免污染日常环境。
+
+## 报错对照表
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| `pnpm` 不是内部或外部命令 | pnpm 未安装或不在 PATH | 安装 pnpm，重开终端，确认 `pnpm -v` |
+| `plugin command failed; diagnostics: ...` | pnpm 执行失败 | 打开提示里的 `pnpm.log` 看原始错误 |
+| `EADDRINUSE ... 3080` | 上一个 dsh 进程还占着端口 | 结束占用进程，或换端口 |
+| `404 Not Found` / `ETARGET` | 包名或版本不存在 | 核对 npm 包名与版本范围 |
+| `ETIMEDOUT` / `ECONNRESET` | registry 或代理不可达 | 检查网络与 registry 配置 |
+| 装完不显示 | 装进了别的 profile | 用 `--profile` 指定对，或检查 UI 当前 profile |
+| 401 | 打开的是不带 token 的地址 | 用启动日志里完整的 `?token=` 地址 |
+
+## 安全边界
+
+- 第三方插件以你的权限运行，能读工作区文件、执行命令。
+- 只装来源可信、能看懂权限要求的插件。
+- 不要为了装插件关闭沙箱或放宽审批策略。
+- 插件索引本身是第三方内容，DSH 不验证索引里的声明。

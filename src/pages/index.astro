@@ -1,0 +1,307 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import VersionStatusBar from '../components/VersionStatusBar.astro';
+import { getCollection } from 'astro:content';
+import { SITE_NAME, OFFICIAL_DOCS, OFFICIAL_REPO } from '../consts';
+
+const pages = await getCollection('guide');
+const recent = pages
+  .filter((page) => !page.data.noindex)
+  .sort((a, b) => new Date(b.data.updated).getTime() - new Date(a.data.updated).getTime())
+  .slice(0, 5);
+const slugOf = (id: string) => id.replace(/\/index$/, '');
+const base = Astro.site ?? new URL('http://localhost:4321');
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: base.href,
+    inLanguage: 'zh-CN',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${base.href}search/?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  },
+];
+---
+<BaseLayout
+  title="首页"
+  description="DeepSeek Harness 中文手册：安装、插件配置、版本差异与排错，每页标注核验版本与日期。"
+  jsonLd={jsonLd}
+>
+  <div class="container">
+    <section class="hero">
+      <div class="hero__top">
+        <div class="hero__copy">
+          <p class="hero__eyebrow">dsh · developer preview</p>
+          <h1>DeepSeek Harness 中文手册</h1>
+          <p class="hero__lead">能装上、能跑通、能读懂的 dsh 指南。官方文档写接口与设计，这里补上手路径、排错，以及一条能自己复核的源码阅读顺序。</p>
+        </div>
+        <aside class="quickstart">
+          <p class="quickstart__label">最短路径</p>
+          <pre><code>npx @deepseek-ai/dsh@latest web</code></pre>
+          <p class="quickstart__note">默认打开 <code>http://127.0.0.1:3080</code>，需要 Node 与 API Key。</p>
+          <a href="/install/npx/">完整安装步骤 →</a>
+        </aside>
+      </div>
+      <VersionStatusBar />
+    </section>
+
+    <section class="section">
+      <h2>你属于哪种情况</h2>
+      <div class="paths">
+        <a class="path" href="/install/">
+          <span class="path__kicker">第一次用</span>
+          <span class="path__title">先把它装起来</span>
+          <span class="path__desc">桌面版、npx、源码三种方式，每一步都有失败处理。</span>
+        </a>
+        <a class="path" href="/plugins/install/">
+          <span class="path__kicker">卡住了</span>
+          <span class="path__title">插件装不上</span>
+          <span class="path__desc">三种安装入口，一张报错对照表，先定位再动手。</span>
+        </a>
+        <a class="path" href="/plugins/first-plugin/">
+          <span class="path__kicker">想深入</span>
+          <span class="path__title">写第一个插件</span>
+          <span class="path__desc">从最小工具开始，跑通加载，再谈发布。</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>装完先做这三件事</h2>
+      <ol class="steps">
+        <li><strong>填 API Key。</strong>设置 → 模型，保存后下一次请求生效。见 <a href="/models/">模型配置</a>。</li>
+        <li><strong>选工作区。</strong>没选工作区时，对话框不可用。</li>
+        <li><strong>装一个插件并确认它出现。</strong>装完不显示，多半是 profile 不对，见 <a href="/plugins/install/">插件安装</a>。</li>
+      </ol>
+    </section>
+
+    <section class="section" id="source">
+      <h2>读源码：三条主线</h2>
+      <div class="paths">
+        <a class="path" href="/source/plugin-tree/">
+          <span class="path__kicker">源码 01</span>
+          <span class="path__title">插件树怎么长出来</span>
+          <span class="path__desc">profile、bundle、patch 与 composeEntries()，96 行 base 配置的去向。</span>
+        </a>
+        <a class="path" href="/source/message-lifecycle/">
+          <span class="path__kicker">源码 02</span>
+          <span class="path__title">一条消息怎么走完</span>
+          <span class="path__desc">inbox、pre-step、prompt 组装、请求冻结与流式结算。</span>
+        </a>
+        <a class="path" href="/source/tool-pipeline/">
+          <span class="path__kicker">源码 03</span>
+          <span class="path__title">工具调用怎么过关</span>
+          <span class="path__desc">审批、守卫、环绕分发、后置策略与最终冻结。</span>
+        </a>
+      </div>
+    </section>
+
+    <div class="split">
+      <section class="section">
+        <h2>最近更新</h2>
+        <ul class="recent">
+          {recent.map((page) => (
+            <li>
+              <a href={`/${slugOf(page.id)}/`}>{page.data.title}</a>
+              <time datetime={new Date(page.data.updated).toISOString().slice(0, 10)}>{new Date(page.data.updated).toISOString().slice(0, 10)}</time>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>怎么核验</h2>
+        <p>每条命令在 Windows 11 + Node 24 上实跑一次，证据留在仓库。每页头部写核验版本与日期；超过 30 天会显示提示条。源码文章固定到 <code>dsh-v0.2.1-rc.3</code> 的 commit，行号只对那份源码有效。</p>
+        <h2>权威来源</h2>
+        <ul class="links">
+          <li><a href={OFFICIAL_DOCS} rel="noopener">官方文档</a>：术语与接口以这里为准。</li>
+          <li><a href={OFFICIAL_REPO} rel="noopener">官方仓库</a>：源码与 release。</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding: var(--space-8) 0 var(--space-6);
+    border-bottom: 1px solid var(--line);
+  }
+  .hero__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
+    gap: var(--space-7);
+    align-items: end;
+  }
+  .quickstart {
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--paper-raised);
+    box-shadow: var(--shadow-1);
+  }
+  .quickstart__label {
+    margin: 0 0 var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .quickstart pre {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: var(--radius-sm);
+    overflow-x: auto;
+  }
+  .quickstart pre code {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    background: none;
+    padding: 0;
+    color: inherit;
+  }
+  .quickstart__note {
+    margin: var(--space-3) 0;
+    font-size: var(--text-sm);
+    color: var(--ink-soft);
+  }
+  .quickstart a {
+    font-size: var(--text-sm);
+  }
+  .hero__eyebrow {
+    margin: 0 0 var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .hero h1 {
+    margin: 0 0 var(--space-3);
+    max-width: 18ch;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    word-break: keep-all;
+    text-wrap: balance;
+  }
+  .hero__lead {
+    max-width: 52ch;
+    margin: 0;
+    font-size: var(--text-lg);
+    color: var(--ink-soft);
+  }
+  .section {
+    margin-top: var(--space-8);
+  }
+  .section h2 {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-2xl);
+    letter-spacing: -0.01em;
+  }
+  .paths {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+  .path {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--paper-raised);
+    color: var(--ink);
+    text-decoration: none;
+    transition: border-color var(--motion-fast), transform var(--motion-fast);
+  }
+  .path:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .path__kicker {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-faint);
+  }
+  .path__title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+  }
+  .path__desc {
+    font-size: var(--text-sm);
+    color: var(--ink-soft);
+  }
+  .steps {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+  .steps li {
+    position: relative;
+    padding: var(--space-4) var(--space-5) var(--space-4) var(--space-8);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--paper-raised);
+    counter-increment: step;
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: var(--space-5);
+    top: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--accent);
+  }
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: var(--space-7);
+  }
+  .recent,
+  .links {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .recent li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-sm);
+  }
+  .recent time {
+    color: var(--ink-faint);
+    font-family: var(--font-mono);
+    white-space: nowrap;
+  }
+  .links li {
+    margin-block: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  @media (max-width: 860px) {
+    .paths,
+    .split {
+      grid-template-columns: 1fr;
+    }
+    .hero__top {
+      grid-template-columns: 1fr;
+    }
+    .hero {
+      padding-top: var(--space-6);
+    }
+  }
+</style>

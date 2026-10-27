@@ -1,0 +1,3 @@
+- insert:
+    - id: pipeline-hook
+      name: dsh-plugin-pipeline-hook

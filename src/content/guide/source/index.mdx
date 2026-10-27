@@ -1,0 +1,84 @@
+---
+title: "读 dsh 源码：三条主线与固定版本"
+crumb: "源码阅读"
+description: "按 dsh-v0.2.1-rc.3 的源码读三条主线：profile 如何变成插件树、一条消息如何走完步骤、一次工具调用如何过关卡。每篇给文件行号与可运行验证。"
+answer: "先读三篇：插件树（组装）、消息生命周期（agent-loop）、工具流水线（tools）。源码固定到 dsh-v0.2.1-rc.3（commit 1f81c04）；行号只对这份源码有效。"
+updated: "2026-10-27T14:00:00+08:00"
+verified:
+  dsh: "0.2.1-rc.2"
+  npm_latest: "0.2.1-rc.2"
+  npm_next: "0.2.1-rc.4"
+  gh_tag: "dsh-v0.2.1-rc.3"
+  date: "2026-10-27"
+  os: ["windows", "macos", "linux"]
+difficulty: "advanced"
+keywords: ["deepseek harness 源码", "dsh 源码阅读", "cordis 插件树", "dsh agent loop"]
+related: ["source/plugin-tree", "source/message-lifecycle", "source/tool-pipeline"]
+faq:
+  - q: "读源码前要先会什么？"
+    a: "会用 dsh 启动 Web UI、知道 profile 和插件的基本概念即可。Cordis 的五个概念可以在第一篇里边读边补，不需要先通读框架文档。"
+  - q: "为什么文章里的行号不是最新的？"
+    a: "源码行号会随版本移动。本系列固定到 dsh-v0.2.1-rc.3（commit 1f81c04），每页头部写明核验日期；升级后行号可能失效，文件路径与函数名更稳定。"
+  - q: "源码文章和官方文档有什么区别？"
+    a: "官方文档定义接口与设计约束；这里按一次真实运行的顺序把文件串起来，补上先看哪、为什么这样排、怎么自己验证。"
+---
+
+官方文档已经把每个子系统写得很细。这个系列不复述接口表，而是按一次运行发生的顺序，把三块源码串起来：启动时插件树怎么长出来，一条消息怎么变成一个步骤，一次工具调用怎么过完关卡。
+
+每篇的结构相同：一张图、一张源码坐标表、一段能自己跑的命令。图用来建立顺序感，坐标表用来跳进文件，命令用来确认你看到的不是文章里的二手结论。
+
+## 三条主线
+
+| 篇目 | 回答的问题 | 入口文件 | 你会看到 |
+|---|---|---|---|
+| [插件树](/source/plugin-tree/) | 一次 `dsh --profile web` 启动，96 行 base 配置怎么变成运行中的服务？ | `packages/boot/app-boot/src/profile.ts` | profile、bundle、patch、`composeEntries()`、Cordis Loader |
+| [消息生命周期](/source/message-lifecycle/) | 一条 `followup()` 怎么走完 turn 和 step，什么时候写日志、什么时候发请求？ | `packages/core/agent-loop/src/agent.ts` | inbox、`agent/pre-step`、prompt 组装、请求冻结、流式结算 |
+| [工具流水线](/source/tool-pipeline/) | 模型发出 `tool call` 后，谁先看一眼、谁能拒绝、失败怎么变成结果？ | `packages/core/tools/src/index.ts` | 参数快照、审批、守卫、环绕分发、`post-execute`、`finalizeContent` |
+
+三篇有先后关系。插件树解释“东西从哪来”，消息生命周期解释“谁在驱动”，工具流水线解释“能力怎么被安全地调用”。如果只想先解决一个具体问题，也可以直接跳到对应篇目，再回头补前置概念。
+
+## 版本先说清楚
+
+这套文章里的行号固定在一份源码上：
+
+- 源码标签：`dsh-v0.2.1-rc.3`
+- commit：`1f81c047fc48fa190a683e469daa699857e9afe8`
+- npm `latest`：`0.2.1-rc.2`
+- npm `next`：`0.2.1-rc.4`
+
+也就是说，源码读的是 rc.3，命令却在 rc.2 上实跑；`next` 线已经到 rc.4。三个通道不会自动同步，[版本页](/versions/)有完整的对照。行号只对上面这个 commit 有效，文件路径和函数名通常更耐用。
+
+每条源码链接都指向这个 commit 的 GitHub blob，而不是 `main`。这样即使上游继续合并，你点开的仍然是文章写作时读的那份代码。
+
+## 怎么读
+
+1. **先看图，不看代码。** 图里的顺序就是运行时顺序；看不懂的箭头先记下来。
+2. **再读“源码坐标”表。** 按行号打开文件，只读表里那几段，不要从文件第一行开始通读。
+3. **最后跑“自己验证”。** 命令不需要模型 Key 的部分会标出来；需要 Key 的部分单独说明。
+
+源码阅读最容易掉进的坑，是把“文件里存在这个函数”当成“运行时一定走这条路径”。本系列每篇都尽量追到实际调用点：谁调用、在什么条件下调用、失败时走哪条分支。如果某个结论只来自注释或类型声明，文中会直接说“这是注释里的约束”，不会把它写成实测行为。
+
+## 实验环境
+
+- Windows 11（10.0.26200），Node 24.18.0，npm 11.16.0
+- `dsh` 0.2.1-rc.2，通过 `npx -y @deepseek-ai/dsh@0.2.1-rc.2` 运行
+- 源码：`dsh-v0.2.1-rc.3` 的 codeload 压缩包，解压后按 tag 对应的 commit 核对
+- 需要 pnpm 的命令单独标注；`dsh plugin` 会把参数转发给 profile 目录里的 pnpm
+
+不需要模型 Key 的实验包括 `--dump-config`、源码 grep 和插件加载日志。需要 Key 的实验会明确写出，不把“没跑过”说成“跑过了”。
+
+## 官方文档对应位置
+
+- [架构总览](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)：profile、组合包、轮次流程、能力 seam
+- [Cordis 入门](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/cordis-primer.zh.md)：插件、上下文、服务依赖、waterfall
+- [Agent 轮次与步骤生命周期](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/agent-lifecycle.zh.md)：时序图与事件清单
+- [工具执行流水线](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/tool-execution-pipeline.zh.md)：策略、守卫、审批与结果重写
+- [安全边界](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/SAFETY.md)：沙箱、审批与信任模型
+
+这套文章是“读者版”，不替代官方文档。接口签名、配置字段和设计决策以官方文档为准；文章负责把顺序讲清楚，并给出可以自己复核的入口。
+
+## 从哪篇开始
+
+- 想知道插件从哪来：从[插件树](/source/plugin-tree/)开始。
+- 想知道一条消息怎么走：从[消息生命周期](/source/message-lifecycle/)开始，先读插件树会更顺。
+- 想改工具策略：从[工具流水线](/source/tool-pipeline/)开始，先读消息生命周期会更顺。

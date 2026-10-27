@@ -1,0 +1,16 @@
+{
+  "name": "dsh-plugin-pipeline-hook",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "files": ["index.js", "cordis.patch.yml"],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "dsh": ">=0.2.0 <0.3.0"
+  }
+}

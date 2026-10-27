@@ -1,0 +1,95 @@
+---
+title: "dsh 版本对照：npm dist-tags 与 GitHub tag"
+crumb: "版本"
+description: "解释 npm latest、next、alpha 与 GitHub tag 的关系，说明为什么 npx 装的不是最新版，以及升级和跟进破坏性变更的方法。"
+answer: "截至 2026-10-27：npm latest 是 0.2.1-rc.2，next 是 0.2.1-rc.4，alpha 是 0.2.1-alpha.5；GitHub 最新 tag 是 dsh-v0.2.1-rc.3。npx 默认装 latest，不是 next。"
+updated: "2026-10-27"
+verified:
+  dsh: "0.2.1-rc.2"
+  npm_latest: "0.2.1-rc.2"
+  npm_next: "0.2.1-rc.4"
+  gh_tag: "dsh-v0.2.1-rc.3"
+  date: "2026-10-27"
+  os: ["windows", "macos", "linux"]
+difficulty: "intermediate"
+keywords: ["deepseek harness 版本", "dsh 版本", "npm dist-tags"]
+related: ["install/npx", "troubleshooting"]
+---
+
+## 现在有哪些版本
+
+2026-10-27 核验到的状态：
+
+| 通道 | 版本 | 说明 |
+|---|---|---|
+| npm latest | 0.2.1-rc.2 | `npx` 默认装这个 |
+| npm next | 0.2.1-rc.4 | 更新的预发布版本 |
+| npm alpha | 0.2.1-alpha.5 | 更早的 alpha |
+| GitHub tag | dsh-v0.2.1-rc.3 | 仓库 release 的最新 tag |
+
+这几个数字不是一条线上的相邻版本，也不是自动同步的。`latest`、`next`、`alpha` 是 npm 的发布标签；GitHub tag 是另一套发布动作，时间与内容都可能不同。
+
+## 为什么 npx 装的不是最新
+
+npm 的默认标签是 `latest`。下面两条命令等价：
+
+```bash
+npx @deepseek-ai/dsh web
+npx @deepseek-ai/dsh@latest web
+```
+
+它们拿到的都是 `0.2.1-rc.2`，不是 `next` 上的 `0.2.1-rc.4`。想试下一版，必须显式写：
+
+```bash
+npx @deepseek-ai/dsh@next web
+```
+
+要确认当前各通道的值，直接问 npm：
+
+```bash
+npm view @deepseek-ai/dsh dist-tags
+```
+
+## 版本号怎么读
+
+`0.2.1-rc.2` 拆开看：
+
+- `0`：主版本。官方还在 developer preview，主版本为 0，意味着随时可能有破坏性变更。
+- `2`：次版本。次版本变化通常包含功能调整。
+- `1`：补丁版本。
+- `rc.2`：预发布标记。`alpha` 更早，`rc` 更接近稳定。
+
+同一个次版本内，预发布序号越大越新；跨次版本时不要只比较数字大小，先看 release 说明。
+
+## 升级
+
+写死版本号最可控：
+
+```bash
+npx @deepseek-ai/dsh@0.2.1-rc.4 web --no-open
+```
+
+长期使用建议：
+
+1. 在脚本里固定版本，不用 `@latest` 漂移。
+2. 升级前用单独的 `DSH_HOME` 试跑，避免污染日常 profile。
+3. 升级后重新跑一次插件加载检查：`dsh --profile web --dump-config`。
+
+## 破坏性变更怎么跟
+
+官方在 README 里明确标注 developer preview，会有兼容性破坏。跟进时看三处：
+
+- GitHub Releases 的说明
+- `engines.dsh`：插件声明的兼容范围
+- 官方 `upgrade-guide` 文档
+
+插件作者尤其要注意：`engines.dsh` 不匹配时，安装或启动会被拒绝。这比运行时才报错更早暴露问题。
+
+## 本站的核验规则
+
+- 每页头部写核验的 dsh 版本与日期
+- 每周脚本比对 npm dist-tags 与 GitHub 最新 tag
+- 页面核验超过 30 天会显示提示条
+- 版本对照表以 `src/data/versions.json` 为准，该文件由脚本生成
+
+如果你看到页面版本与当前 npm 不一致，以官方 release 与本页日期较新的信息为准，并欢迎提 issue。
