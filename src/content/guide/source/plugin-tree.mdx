@@ -36,16 +36,14 @@ faq:
 
 ## 源码坐标
 
-| 位置 | 读什么 |
-|---|---|
-| [`profile.ts:3-14`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/boot/app-boot/src/profile.ts#L3-L14) | profile 目录的组成，以及 bundle、profile patch、launcher patch 的应用顺序 |
-| [`profile.ts:40`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/boot/app-boot/src/profile.ts#L40) | `PROFILE_PATCH_FILENAME`，用户 patch 的文件名 |
-| [`profile.ts:816-823`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/boot/app-boot/src/profile.ts#L816-L823) | `composeEntries()`：把多层 patch 合成为扁平 entry 列表 |
-| [`profile-boot.ts:68-75`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/apps/cli/src/profile-boot.ts#L68-L75) | home 级 patch 的位置与优先级 |
-| [`profile-boot.ts:181-199`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/apps/cli/src/profile-boot.ts#L181-L199) | `prepareProfile()`：加载 profile、重写空根配置 |
-| [`profile-boot.ts:323-341`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/apps/cli/src/profile-boot.ts#L323-L341) | `boot()`：把 patch 层交给 Loader |
-| [`profile-context.ts:74-84`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/boot/app-boot/src/profile-context.ts#L74-L84) | `readProfilePatches()`：五层 patch 的实际拼接顺序 |
-| [`cordis.patch.yml:1-13`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/bundle/base/cordis.patch.yml#L1-L13) | base bundle 的单个 `insert`，以及“行顺序不承载加载语义”的注释 |
+- [`profile.ts:3-14`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/boot/app-boot/src/profile.ts#L3-L14) — profile 目录的组成，以及 bundle、profile patch、launcher patch 的应用顺序
+- [`profile.ts:40`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/boot/app-boot/src/profile.ts#L40) — `PROFILE_PATCH_FILENAME`，用户 patch 的文件名
+- [`profile.ts:816-823`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/boot/app-boot/src/profile.ts#L816-L823) — `composeEntries()`：把多层 patch 合成为扁平 entry 列表
+- [`profile-boot.ts:68-75`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/apps/cli/src/profile-boot.ts#L68-L75) — home 级 patch 的位置与优先级
+- [`profile-boot.ts:181-199`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/apps/cli/src/profile-boot.ts#L181-L199) — `prepareProfile()`：加载 profile、重写空根配置
+- [`profile-boot.ts:323-341`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/apps/cli/src/profile-boot.ts#L323-L341) — `boot()`：把 patch 层交给 Loader
+- [`profile-context.ts:74-84`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/boot/app-boot/src/profile-context.ts#L74-L84) — `readProfilePatches()`：五层 patch 的实际拼接顺序
+- [`cordis.patch.yml:1-13`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/bundle/base/cordis.patch.yml#L1-L13) — base bundle 的单个 `insert`，以及“行顺序不承载加载语义”的注释
 
 ## Profile 目录里有什么
 

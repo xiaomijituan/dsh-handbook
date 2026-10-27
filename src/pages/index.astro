@@ -34,7 +34,9 @@ const jsonLd = [
 >
   <section class="hero-banner" slot="banner">
     <picture>
+      <source media="(max-width: 720px)" srcset="/banner/hero-mobile.webp" type="image/webp" />
       <source media="(max-width: 720px)" srcset="/banner/hero-mobile.png" />
+      <source srcset="/banner/hero-desktop.webp" type="image/webp" />
       <img
         src="/banner/hero-desktop.png"
         alt="dsh 中文手册：从安装、插件到源码的三步路径"

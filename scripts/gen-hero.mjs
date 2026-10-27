@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import sharp from 'sharp';
 
 const kicker = 'DEEPSEEK HARNESS · 中文手册';
 const title = '从一条命令，<br>到一棵插件树';
@@ -268,6 +269,7 @@ writeFileSync(htmlPath, page());
 
 for (const target of targets) {
   const pngPath = join(outDir, `${target.name}.png`);
+  const webpPath = join(outDir, `${target.name}.webp`);
   execFileSync(
     chrome,
     [
@@ -282,5 +284,8 @@ for (const target of targets) {
     { stdio: 'inherit' },
   );
   const buffer = readFileSync(pngPath);
-  console.log(`${target.name}: ${buffer.readUInt32BE(16)}x${buffer.readUInt32BE(20)} ${buffer.length} bytes`);
+  await sharp(pngPath).webp({ quality: 82 }).toFile(webpPath);
+  console.log(
+    `${target.name}: ${buffer.readUInt32BE(16)}x${buffer.readUInt32BE(20)} png=${buffer.length} webp=${readFileSync(webpPath).length}`,
+  );
 }

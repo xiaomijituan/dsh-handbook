@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./public/banner/hero-desktop.png" alt="dsh 中文手册：从一条命令，到一棵插件树">
+</p>
+
 # DeepSeek Harness 中文手册
 
 [![ci](https://github.com/xiaomijituan/dsh-handbook/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/xiaomijituan/dsh-handbook/actions/workflows/ci.yml)

@@ -36,18 +36,16 @@ faq:
 
 ## 源码坐标
 
-| 位置 | 读什么 |
-|---|---|
-| [`agent.ts:298-399`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L298-L399) | `turn()`：turn/start、pre-step、step 循环、turn-stopping、turn/end |
-| [`agent.ts:267-289`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L267-L289) | `preStep()`：调用 `agent/pre-step`，拿到 reject 或 enter |
-| [`agent.ts:400-441`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L400-L441) | `step()` 前半：渲染提示词、提交系统消息、接纳用户消息 |
-| [`agent.ts:564-615`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L564-L615) | `prepareRequest()`：`agent/request` 与 `llm.prepareCall()` |
-| [`agent.ts:616-700`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L616-L700) | `buildRequest()`：request/header、request/context、冻结请求 |
-| [`inbox.ts:109-113`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/inbox.ts#L109-L113) | `claim()`：next-step 与 next-turn 的领取规则 |
-| [`system-prompt/src/index.ts:20-32`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/system-prompt/src/index.ts#L20-L32) | `system-prompt/assemble` waterfall |
-| [`tool-calls.ts:60-113`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/tool-calls.ts#L60-L113) | `executeToolCalls()`：屏障、滚动池、按模型顺序提交 |
-| [`session/src/index.ts:984-1011`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/session/src/index.ts#L984-L1011) | `deriveMessages()`：从日志折叠模型历史 |
-| [`llm/src/index.ts:956-964`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/llm/llm/src/index.ts#L956-L964) | `prepareCall()`：绑定适配器与调用能力 |
+- [`agent.ts:298-399`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L298-L399) — `turn()`：turn/start、pre-step、step 循环、turn-stopping、turn/end
+- [`agent.ts:267-289`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L267-L289) — `preStep()`：调用 `agent/pre-step`，拿到 reject 或 enter
+- [`agent.ts:400-441`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L400-L441) — `step()` 前半：渲染提示词、提交系统消息、接纳用户消息
+- [`agent.ts:564-615`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L564-L615) — `prepareRequest()`：`agent/request` 与 `llm.prepareCall()`
+- [`agent.ts:616-700`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L616-L700) — `buildRequest()`：request/header、request/context、冻结请求
+- [`inbox.ts:109-113`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/inbox.ts#L109-L113) — `claim()`：next-step 与 next-turn 的领取规则
+- [`system-prompt/src/index.ts:20-32`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/system-prompt/src/index.ts#L20-L32) — `system-prompt/assemble` waterfall
+- [`tool-calls.ts:60-113`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/tool-calls.ts#L60-L113) — `executeToolCalls()`：屏障、滚动池、按模型顺序提交
+- [`session/src/index.ts:984-1011`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/session/src/index.ts#L984-L1011) — `deriveMessages()`：从日志折叠模型历史
+- [`llm/src/index.ts:956-964`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/llm/llm/src/index.ts#L956-L964) — `prepareCall()`：绑定适配器与调用能力
 
 ## 先分清三个边界
 
