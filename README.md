@@ -55,7 +55,7 @@ npm run check:links      # 站内链接与锚点
 - 部署构建必须设置 `SITE_URL`，否则 canonical、robots 与 sitemap 会写 localhost
 - 内置 `/llms.txt`（站点摘要）与 `/llms-full.txt`（全部正文），给生成式搜索引擎一次读全
 - 分享图在 `/og/*.png`（1200×630）；三张源码图有独立图片 sitemap，与普通 sitemap 一起在 `robots.txt` 声明
-- 分享图由 `npm run seo:og` 重新生成，需要本机安装 Chrome（或设置 `CHROME_PATH`）
+- 分享图由 `npm run seo:og` 重新生成，首页横幅由 `npm run hero` 重新生成，均需要本机安装 Chrome（或设置 `CHROME_PATH`）
 - 国内托管涉及备案；域名确定后再部署
 
 ```bash

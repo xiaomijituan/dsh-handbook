@@ -65,6 +65,7 @@ const ogImage = new URL(image, site);
   <body>
     <a class="skip-link" href="#main">跳到正文</a>
     <SiteHeader />
+    <slot name="banner" />
     <main id="main"><slot /></main>
     <SiteFooter />
   </body>
