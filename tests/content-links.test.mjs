@@ -1,8 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { resolveContentUrl } from '../scripts/lib/content-links.mjs';
 
 const contentDir = '/site/src/content/guide';
+const contentRoot = fileURLToPath(new URL('../src/content/guide/', import.meta.url));
+
+function walk(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = join(dir, entry.name);
+    return entry.isDirectory() ? walk(full) : full.endsWith('.mdx') ? [full] : [];
+  });
+}
 
 test('同目录的 .mdx 链接改写成站内路由', () => {
   assert.equal(
@@ -43,4 +54,15 @@ test('越出内容目录的链接原样保留', () => {
     resolveContentUrl('/site/src/content/guide/a.mdx', '../../../README.mdx', contentDir),
     '../../../README.mdx',
   );
+});
+
+test('内容文件不使用站内绝对路径链接（GitHub 会解析成 blob 下的 404）', () => {
+  const offenders = [];
+  for (const file of walk(contentRoot)) {
+    const text = readFileSync(file, 'utf8');
+    for (const match of text.matchAll(/\]\((\/[^)\s]*)\)/g)) {
+      offenders.push(`${file}: ${match[1]}`);
+    }
+  }
+  assert.deepEqual(offenders, []);
 });
