@@ -4,6 +4,8 @@ import sitemap from '@astrojs/sitemap';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import matter from 'gray-matter';
+import { unified } from '@astrojs/markdown-remark';
+import remarkContentLinks from './scripts/lib/content-links.mjs';
 
 function walk(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -45,6 +47,7 @@ export default defineConfig({
     }),
   ],
   markdown: {
+    processor: unified({ remarkPlugins: [remarkContentLinks] }),
     shikiConfig: { theme: 'github-dark', wrap: true },
   },
 });

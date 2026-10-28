@@ -29,19 +29,19 @@ faq:
 
 ## 三条主线
 
-### 01 · [插件树](/source/plugin-tree/)
+### 01 · [插件树](./plugin-tree.mdx)
 
 一次 `dsh --profile web` 启动，96 行 base 配置怎么变成运行中的服务？
 
 入口：`packages/boot/app-boot/src/profile.ts`。你会看到 profile、bundle、patch、`composeEntries()`、Cordis Loader。
 
-### 02 · [消息生命周期](/source/message-lifecycle/)
+### 02 · [消息生命周期](./message-lifecycle.mdx)
 
 一条 `followup()` 怎么走完 turn 和 step，什么时候写日志、什么时候发请求？
 
 入口：`packages/core/agent-loop/src/agent.ts`。你会看到 inbox、`agent/pre-step`、prompt 组装、请求冻结、流式结算。
 
-### 03 · [工具流水线](/source/tool-pipeline/)
+### 03 · [工具流水线](./tool-pipeline.mdx)
 
 模型发出 `tool call` 后，谁先看一眼、谁能拒绝、失败怎么变成结果？
 
@@ -58,7 +58,7 @@ faq:
 - npm `latest`：`0.2.1-rc.2`
 - npm `next`：`0.2.1-rc.4`
 
-也就是说，源码读的是 rc.3，命令却在 rc.2 上实跑；`next` 线已经到 rc.4。三个通道不会自动同步，[版本页](/versions/)有完整的对照。行号只对上面这个 commit 有效，文件路径和函数名通常更耐用。
+也就是说，源码读的是 rc.3，命令却在 rc.2 上实跑；`next` 线已经到 rc.4。三个通道不会自动同步，[版本页](../versions.mdx)有完整的对照。行号只对上面这个 commit 有效，文件路径和函数名通常更耐用。
 
 每条源码链接都指向这个 commit 的 GitHub blob，而不是 `main`。这样即使上游继续合并，你点开的仍然是文章写作时读的那份代码。
 
@@ -91,6 +91,6 @@ faq:
 
 ## 从哪篇开始
 
-- 想知道插件从哪来：从[插件树](/source/plugin-tree/)开始。
-- 想知道一条消息怎么走：从[消息生命周期](/source/message-lifecycle/)开始，先读插件树会更顺。
-- 想改工具策略：从[工具流水线](/source/tool-pipeline/)开始，先读消息生命周期会更顺。
+- 想知道插件从哪来：从[插件树](./plugin-tree.mdx)开始。
+- 想知道一条消息怎么走：从[消息生命周期](./message-lifecycle.mdx)开始，先读插件树会更顺。
+- 想改工具策略：从[工具流水线](./tool-pipeline.mdx)开始，先读消息生命周期会更顺。

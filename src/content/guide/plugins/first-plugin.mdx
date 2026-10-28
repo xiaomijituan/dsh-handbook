@@ -99,7 +99,7 @@ dsh --profile hello --dump-config
 
 实测输出：profile 初始化成功，`dsh-plugin-hello` 以链接方式加入，`--dump-config` 里能看到这个 bundle；用 `dsh --profile hello web --no-open` 启动，6 秒后打印加载日志。
 
-注意：`dsh plugin` 依赖 pnpm。本机没有 pnpm 时会直接报“不是内部或外部命令”，见 [插件安装与排错](/plugins/install/#命令行dsh-plugin-add)。
+注意：`dsh plugin` 依赖 pnpm。本机没有 pnpm 时会直接报“不是内部或外部命令”，见 [插件安装与排错](./install.mdx#命令行dsh-plugin-add)。
 
 ## 注册一个工具
 
@@ -150,4 +150,4 @@ export function apply(ctx: Context) {
 
 - 官方开发教程：[第一个插件](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/index.zh.md)
 - 工具编写参考：[adding-a-tool](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cookbook/adding-a-tool.zh.md)
-- 插件安装与报错：[插件安装与排错](/plugins/install/)
+- 插件安装与报错：[插件安装与排错](./install.mdx)
