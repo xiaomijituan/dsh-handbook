@@ -1,7 +1,7 @@
 ---
 import versions from '../data/versions.json';
-import { withBase } from '../consts';
-const checked = versions.checkedAt.slice(0, 10);
+import { formatCheckedDate, withBase } from '../consts';
+const checked = formatCheckedDate(versions.checkedAt);
 ---
 <section class="version-status" aria-label="当前版本状态">
   <p class="version-status__title">当前版本 · {checked} 核验</p>

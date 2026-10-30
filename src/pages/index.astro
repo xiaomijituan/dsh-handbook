@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import VersionStatusBar from '../components/VersionStatusBar.astro';
 import { getCollection } from 'astro:content';
-import { SITE_NAME, OFFICIAL_DOCS, OFFICIAL_REPO, withBase } from '../consts';
+import { SITE_NAME, OFFICIAL_DOCS, OFFICIAL_REPO, formatCheckedDate, withBase } from '../consts';
 import versions from '../data/versions.json';
 
 const pages = await getCollection('guide');
@@ -53,7 +53,7 @@ const jsonLd = [
       <p class="hero__eyebrow">dsh · 中文上手手册</p>
       <h1>DeepSeek Harness 中文手册</h1>
       <p class="hero__lead">dsh（DeepSeek Harness）是把 AI 模型、工具、插件和本机的工作目录接在一起运行的程序，由 DeepSeek 开源。这本手册先讲怎么把 dsh 安装好、运行起来，再解释插件与版本，读源码的部分放在最后。</p>
-      <p class="hero__meta">本站核验于 {versions.checkedAt.slice(0, 10)} · dsh {versions.npm.latest} · <a href={withBase('/versions/')}>版本差异</a></p>
+      <p class="hero__meta">本站核验于 {formatCheckedDate(versions.checkedAt)} · dsh {versions.npm.latest} · <a href={withBase('/versions/')}>版本差异</a></p>
       <div class="hero__actions">
         <a class="button button--primary" href={withBase('/install/desktop/')}>第一次用：安装桌面版</a>
         <a class="button" href={withBase('/install/')}>三种安装方式怎么选</a>
@@ -136,7 +136,7 @@ const jsonLd = [
 
       <section class="section">
         <h2>核验方法</h2>
-        <p>“核验”分两种情况：能在本机运行的命令，都在 Windows 11 + Node 24 的环境下执行过一次，本站把这种情况标为“实测”；本机跑不了的步骤按官方文档核对，并在页面上写明。每页头部标注核验到的 dsh 版本与核验日期，超过 30 天会显示提示条。源码文章固定到 <code>dsh-v0.2.1-rc.3</code> 的 commit，行号只对那份源码有效。</p>
+        <p>“核验”分两种情况：能在本机运行的命令，都在 Windows 11 + Node 24 的环境下执行过一次，本站把这种情况标为“实测”；本机跑不了的步骤按官方文档核对，并在页面上写明。每页头部标注核验到的 dsh 版本与核验日期，超过 30 天会显示提示条。源码文章固定到 <code>{versions.github.tag}</code> 的 commit，行号只对那份源码有效。</p>
         <h2>权威来源</h2>
         <ul class="links">
           <li><a href={OFFICIAL_DOCS} rel="noopener">官方文档</a>：dsh 的术语和接口定义以官方文档为准。</li>

@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import versions from '../data/versions.json';
-import { absoluteBase } from '../consts';
+import { absoluteBase, formatCheckedDate } from '../consts';
 
 const groups: { heading: string; slugs: string[] }[] = [
   { heading: '开始', slugs: ['about', 'models', 'troubleshooting'] },
@@ -23,7 +23,7 @@ export const GET: APIRoute = async ({ site }) => {
     '',
     '> 面向 dsh（DeepSeek Harness）的中文实战手册：安装、插件、排错与源码阅读。',
     '> 每页标注核验版本与日期。',
-    `> 核验基准：npm latest ${versions.npm.latest}，GitHub tag ${versions.github.tag}，核验于 ${versions.checkedAt.slice(0, 10)}。`,
+    `> 核验基准：npm latest ${versions.npm.latest}，GitHub tag ${versions.github.tag}，核验于 ${formatCheckedDate(versions.checkedAt)}。`,
     '',
     '官方文档写接口与设计，这里补上手路径、排错，以及一条能自己复核的源码阅读顺序。',
     '安装优先看 npx 一页；插件装不上先看插件目录页的排查表；源码按插件树 → 消息生命周期 → 工具管线的顺序读。',

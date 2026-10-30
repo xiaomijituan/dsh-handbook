@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import matter from 'gray-matter';
 import versions from '../data/versions.json';
-import { absoluteBase } from '../consts';
+import { absoluteBase, formatCheckedDate } from '../consts';
 
 const files = import.meta.glob('../content/guide/**/*.mdx', {
   query: '?raw',
@@ -37,7 +37,7 @@ export const GET: APIRoute = ({ site }) => {
     '# DeepSeek Harness 中文手册 · 全文',
     '',
     '> 面向 dsh（DeepSeek Harness）的中文实战手册：安装、插件、排错与源码阅读。',
-    `> 核验基准：npm latest ${versions.npm.latest}，GitHub tag ${versions.github.tag}，核验于 ${versions.checkedAt.slice(0, 10)}。`,
+    `> 核验基准：npm latest ${versions.npm.latest}，GitHub tag ${versions.github.tag}，核验于 ${formatCheckedDate(versions.checkedAt)}。`,
     '> 社区项目，与 DeepSeek 官方无关。每页正文前保留核验日期，便于判断时效。',
     '',
     '本文件按站点导航顺序收录全部正文，供生成式搜索引擎一次读取。逐页摘要见 /llms.txt。',

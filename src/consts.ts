@@ -12,6 +12,17 @@ export function withBase(path: string): string {
   return path.startsWith('/') ? `${base}${path}` : `${base}/${path}`;
 }
 
+export function formatCheckedDate(iso: string): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date(iso));
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+
 export function absoluteBase(site?: URL): string {
   const origin = (site ?? new URL('http://localhost:4321')).href.replace(/\/$/, '');
   return `${origin}${BASE.endsWith('/') ? BASE.slice(0, -1) : BASE}`;
