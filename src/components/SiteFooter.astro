@@ -1,11 +1,11 @@
 ---
-import { GITHUB_URL } from '../consts';
+import { GITHUB_URL, withBase } from '../consts';
 const year = new Date().getFullYear();
 ---
 <footer class="site-footer">
   <div class="container footer-inner">
-    <p>本站是社区维护的项目，与 DeepSeek 官方无关。核验方法与更新策略写在 <a href="/about/">关于本站</a>。</p>
-    <p>正文采用 CC BY 4.0 · 代码采用 MIT · <a href={GITHUB_URL} rel="noopener">在 GitHub 上纠错</a> · <a href="/search/">站内搜索</a></p>
+    <p>本站是社区维护的项目，与 DeepSeek 官方无关。核验方法与更新策略写在 <a href={withBase('/about/')}>关于本站</a>。</p>
+    <p>正文采用 CC BY 4.0 · 代码采用 MIT · <a href={GITHUB_URL} rel="noopener">在 GitHub 上纠错</a> · <a href={withBase('/search/')}>站内搜索</a></p>
     <p class="footer-copy">© {year} dsh-handbook</p>
   </div>
 </footer>

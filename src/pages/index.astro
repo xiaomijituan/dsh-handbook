@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import VersionStatusBar from '../components/VersionStatusBar.astro';
 import { getCollection } from 'astro:content';
-import { SITE_NAME, OFFICIAL_DOCS, OFFICIAL_REPO } from '../consts';
+import { SITE_NAME, OFFICIAL_DOCS, OFFICIAL_REPO, withBase } from '../consts';
 import versions from '../data/versions.json';
 
 const pages = await getCollection('guide');
@@ -12,16 +12,17 @@ const recent = pages
   .slice(0, 5);
 const slugOf = (id: string) => id.replace(/\/index$/, '');
 const base = Astro.site ?? new URL('http://localhost:4321');
+const siteRoot = new URL(withBase('/'), base).href;
 const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: SITE_NAME,
-    url: base.href,
+    url: siteRoot,
     inLanguage: 'zh-CN',
     potentialAction: {
       '@type': 'SearchAction',
-      target: `${base.href}search/?q={search_term_string}`,
+      target: `${siteRoot}search/?q={search_term_string}`,
       'query-input': 'required name=search_term_string',
     },
   },
@@ -34,11 +35,11 @@ const jsonLd = [
 >
   <section class="hero-banner" slot="banner">
     <picture>
-      <source media="(max-width: 720px)" srcset="/banner/hero-mobile.webp" type="image/webp" />
-      <source media="(max-width: 720px)" srcset="/banner/hero-mobile.png" />
-      <source srcset="/banner/hero-desktop.webp" type="image/webp" />
+      <source media="(max-width: 720px)" srcset={withBase('/banner/hero-mobile.webp')} type="image/webp" />
+      <source media="(max-width: 720px)" srcset={withBase('/banner/hero-mobile.png')} />
+      <source srcset={withBase('/banner/hero-desktop.webp')} type="image/webp" />
       <img
-        src="/banner/hero-desktop.png"
+        src={withBase('/banner/hero-desktop.png')}
         alt="dsh 中文手册：从安装、插件到源码的三步路径"
         width="2400"
         height="420"
@@ -52,10 +53,10 @@ const jsonLd = [
       <p class="hero__eyebrow">dsh · 中文上手手册</p>
       <h1>DeepSeek Harness 中文手册</h1>
       <p class="hero__lead">dsh（DeepSeek Harness）是把 AI 模型、工具、插件和本机的工作目录接在一起运行的程序，由 DeepSeek 开源。这本手册先讲怎么把 dsh 安装好、运行起来，再解释插件与版本，读源码的部分放在最后。</p>
-      <p class="hero__meta">本站核验于 {versions.checkedAt.slice(0, 10)} · dsh {versions.npm.latest} · <a href="/versions/">版本差异</a></p>
+      <p class="hero__meta">本站核验于 {versions.checkedAt.slice(0, 10)} · dsh {versions.npm.latest} · <a href={withBase('/versions/')}>版本差异</a></p>
       <div class="hero__actions">
-        <a class="button button--primary" href="/install/desktop/">第一次用：安装桌面版</a>
-        <a class="button" href="/install/">三种安装方式怎么选</a>
+        <a class="button button--primary" href={withBase('/install/desktop/')}>第一次用：安装桌面版</a>
+        <a class="button" href={withBase('/install/')}>三种安装方式怎么选</a>
       </div>
       <p class="hero__reassure">不需要先懂命令行，也不需要先读源码。源码那几篇是选修内容，等 dsh 能在本机跑起来之后再看更省力。</p>
     </section>
@@ -63,17 +64,17 @@ const jsonLd = [
     <section class="section">
       <h2>你属于哪种情况</h2>
       <div class="paths">
-        <a class="path" href="/install/">
+        <a class="path" href={withBase('/install/')}>
           <span class="path__kicker">第一次用</span>
           <span class="path__title">先把 dsh 装起来</span>
           <span class="path__desc">桌面版、npx（在命令行里启动，适合临时试一次）、源码三种方式，每种都写了准备条件和常见失败的处理。</span>
         </a>
-        <a class="path" href="/plugins/install/">
+        <a class="path" href={withBase('/plugins/install/')}>
           <span class="path__kicker">卡住了</span>
           <span class="path__title">插件装不上</span>
           <span class="path__desc">Web UI 的插件页、命令行、本地路径三种安装入口，一张报错对照表，先按现象找到原因，再决定怎么处理。</span>
         </a>
-        <a class="path" href="/plugins/first-plugin/">
+        <a class="path" href={withBase('/plugins/first-plugin/')}>
           <span class="path__kicker">想深入</span>
           <span class="path__title">写第一个插件</span>
           <span class="path__desc">先写一个最小插件，确认启动日志里有加载记录，再学注册工具和发布到 npm 与 GitHub。</span>
@@ -86,33 +87,33 @@ const jsonLd = [
       <div class="quickstart">
         <pre><code>npx @deepseek-ai/dsh@latest web</code></pre>
         <p class="quickstart__note">运行这条命令之前，本机要有 Node，还要有 DeepSeek API Key。dsh 启动后默认在本机的 <code>http://127.0.0.1:3080</code> 上等待访问，浏览器会自动打开带 token（启动时生成的访问串）的地址。打开不带 token 的地址会显示 401（服务端拒绝没带 token 的请求），这不等于安装失败：改用启动日志里带 token 的地址即可。</p>
-        <a href="/install/npx/">完整的 npx 步骤 →</a>
+        <a href={withBase('/install/npx/')}>完整的 npx 步骤 →</a>
       </div>
     </details>
 
     <section class="section">
       <h2>装完先做这三件事</h2>
       <ol class="steps">
-        <li><strong>填 API Key。</strong>API Key 是一串用来调用 DeepSeek 模型的访问口令。打开设置 → 模型，在 DeepSeek 卡片里填入 API Key 并保存；保存后的下一次请求就会用到刚保存的 Key，不需要重启服务。见 <a href="/models/">模型配置</a>。</li>
+        <li><strong>填 API Key。</strong>API Key 是一串用来调用 DeepSeek 模型的访问口令。打开设置 → 模型，在 DeepSeek 卡片里填入 API Key 并保存；保存后的下一次请求就会用到刚保存的 Key，不需要重启服务。见 <a href={withBase('/models/')}>模型配置</a>。</li>
         <li><strong>选工作区。</strong>dsh 把工作区当作默认的读写位置，第一次启动后要在界面里选一次。没有选工作区时，界面上的输入框不可用。</li>
-        <li><strong>装一个插件，确认插件装上了。</strong>profile 是 dsh 的一个配置目录，一个 profile 装一套插件，Web UI 只显示当前 profile 里已装的插件。装完不显示，多半是插件装进了另一个 profile：先确认插件装进了哪个 profile，再确认 Web UI 用的是同一个。见 <a href="/plugins/install/">插件安装</a>。</li>
+        <li><strong>装一个插件，确认插件装上了。</strong>profile 是 dsh 的一个配置目录，一个 profile 装一套插件，Web UI 只显示当前 profile 里已装的插件。装完不显示，多半是插件装进了另一个 profile：先确认插件装进了哪个 profile，再确认 Web UI 用的是同一个。见 <a href={withBase('/plugins/install/')}>插件安装</a>。</li>
       </ol>
     </section>
 
     <section class="section" id="source">
       <h2>读源码：三条主线</h2>
       <div class="paths">
-        <a class="path" href="/source/plugin-tree/">
+        <a class="path" href={withBase('/source/plugin-tree/')}>
           <span class="path__kicker">源码 01</span>
           <span class="path__title">插件树的组装过程</span>
           <span class="path__desc">profile（列出要用哪些组合包的一个目录）、bundle（一组配置改动的分发单位）、patch（按 id 替换整段配置的片段）逐层合成运行中的服务；base 组合包是共享的第一层，里面有 96 行配置。</span>
         </a>
-        <a class="path" href="/source/message-lifecycle/">
+        <a class="path" href={withBase('/source/message-lifecycle/')}>
           <span class="path__kicker">源码 02</span>
           <span class="path__title">一条消息怎样变成一个步骤</span>
           <span class="path__desc">一条消息从被领取、组装提示词、冻结请求，到流式返回和写入日志，中间会留下哪些记录。</span>
         </a>
-        <a class="path" href="/source/tool-pipeline/">
+        <a class="path" href={withBase('/source/tool-pipeline/')}>
           <span class="path__kicker">源码 03</span>
           <span class="path__title">一次工具调用要过哪些关卡</span>
           <span class="path__desc">模型要用工具时，一次调用要按顺序经过审批、各项守卫、执行和后置处理，最后冻结成一条结果；调用被拒绝也算一种结果。</span>
@@ -126,7 +127,7 @@ const jsonLd = [
         <ul class="recent">
           {recent.map((page) => (
             <li>
-              <a href={`/${slugOf(page.id)}/`}>{page.data.title}</a>
+              <a href={withBase(`/${slugOf(page.id)}/`)}>{page.data.title}</a>
               <time datetime={new Date(page.data.updated).toISOString().slice(0, 10)}>{new Date(page.data.updated).toISOString().slice(0, 10)}</time>
             </li>
           ))}

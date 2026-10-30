@@ -1,11 +1,12 @@
 import type { APIRoute } from 'astro';
+import { absoluteBase, withBase } from '../consts';
 
 export const GET: APIRoute = ({ site }) => {
-  const base = (site ?? new URL('http://localhost:4321')).href.replace(/\/$/, '');
+  const base = absoluteBase(site);
   const body = [
     'User-agent: *',
     'Allow: /',
-    'Disallow: /search/',
+    `Disallow: ${withBase('/search/')}`,
     '',
     `Sitemap: ${base}/sitemap-index.xml`,
     `Sitemap: ${base}/image-sitemap.xml`,

@@ -1,5 +1,6 @@
 ---
 import versions from '../data/versions.json';
+import { withBase } from '../consts';
 const checked = versions.checkedAt.slice(0, 10);
 ---
 <section class="version-status" aria-label="当前版本状态">
@@ -9,7 +10,7 @@ const checked = versions.checkedAt.slice(0, 10);
     <div><dt>npm next</dt><dd>{versions.npm.next}</dd></div>
     <div><dt>GitHub 最新 tag</dt><dd>{versions.github.tag}</dd></div>
   </dl>
-  <p class="version-status__hint"><code>npx</code> 默认安装 latest 标签指向的版本，而 latest 不一定是版本号最高的那个。latest 与 next 是 npm 给版本起的标签名，不是版本号本身；与 GitHub 标签的对应关系见 <a href="/versions/">版本页</a>。</p>
+  <p class="version-status__hint"><code>npx</code> 默认安装 latest 标签指向的版本，而 latest 不一定是版本号最高的那个。latest 与 next 是 npm 给版本起的标签名，不是版本号本身；与 GitHub 标签的对应关系见 <a href={withBase('/versions/')}>版本页</a>。</p>
 </section>
 
 <style>

@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 const EXTERNAL = /^[a-z][a-z0-9+.-]*:/i;
+const URL_ATTRIBUTES = new Set(['href', 'src', 'poster']);
 
 export function resolveContentUrl(filePath, url, contentDir) {
   if (!filePath || typeof url !== 'string') return url;
@@ -26,19 +27,35 @@ export function resolveContentUrl(filePath, url, contentDir) {
   return `/${slug}${slug ? '/' : ''}${query}${hash}`;
 }
 
-function visitLinks(node, fn) {
+export function prefixBase(url, base) {
+  if (!base || typeof url !== 'string') return url;
+  if (url.startsWith('//') || EXTERNAL.test(url) || url.startsWith('#')) return url;
+  return url.startsWith('/') ? `${base}${url}` : url;
+}
+
+function visit(node, dir, base) {
   if (!node || typeof node !== 'object') return;
-  if (node.type === 'link') fn(node);
+
+  if (node.type === 'link' || node.type === 'image') {
+    node.url = prefixBase(resolveContentUrl(dir.path, node.url, dir.contentDir), base);
+  }
+
+  if (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') {
+    for (const attribute of node.attributes ?? []) {
+      if (attribute?.type !== 'mdxJsxAttribute' || !URL_ATTRIBUTES.has(attribute.name)) continue;
+      if (typeof attribute.value === 'string') attribute.value = prefixBase(attribute.value, base);
+    }
+  }
+
   if (Array.isArray(node.children)) {
-    for (const child of node.children) visitLinks(child, fn);
+    for (const child of node.children) visit(child, dir, base);
   }
 }
 
 export default function remarkContentLinks(options = {}) {
   const contentDir = path.resolve(options.contentDir ?? 'src/content/guide');
+  const base = options.base ?? '';
   return (tree, file) => {
-    visitLinks(tree, (node) => {
-      node.url = resolveContentUrl(file.path, node.url, contentDir);
-    });
+    visit(tree, { path: file.path, contentDir }, base);
   };
 }

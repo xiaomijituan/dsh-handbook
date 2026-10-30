@@ -1,23 +1,23 @@
 ---
-import { SITE_NAME, GITHUB_URL } from '../consts';
+import { SITE_NAME, GITHUB_URL, withBase } from '../consts';
 const links = [
-  { href: '/install/', label: '安装' },
-  { href: '/plugins/', label: '插件' },
-  { href: '/source/', label: '源码' },
-  { href: '/versions/', label: '版本' },
-  { href: '/troubleshooting/', label: '排错' },
-  { href: '/about/', label: '关于' },
+  { href: withBase('/install/'), label: '安装' },
+  { href: withBase('/plugins/'), label: '插件' },
+  { href: withBase('/source/'), label: '源码' },
+  { href: withBase('/versions/'), label: '版本' },
+  { href: withBase('/troubleshooting/'), label: '排错' },
+  { href: withBase('/about/'), label: '关于' },
 ];
 const path = Astro.url.pathname;
 ---
 <header class="site-header">
   <div class="container header-inner">
-    <a class="brand" href="/"><span class="brand__mark">dsh</span><span class="brand__name">{SITE_NAME}</span></a>
+    <a class="brand" href={withBase('/')}><span class="brand__mark">dsh</span><span class="brand__name">{SITE_NAME}</span></a>
     <nav class="nav" aria-label="主导航">
       {links.map((l) => <a href={l.href} aria-current={path.startsWith(l.href) ? 'page' : undefined}>{l.label}</a>)}
     </nav>
     <div class="header-actions">
-      <a href="/search/" aria-label="搜索">搜索</a>
+      <a href={withBase('/search/')} aria-label="搜索">搜索</a>
       <a href={GITHUB_URL} rel="noopener">GitHub</a>
     </div>
   </div>

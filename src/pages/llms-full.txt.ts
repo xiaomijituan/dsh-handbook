@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import matter from 'gray-matter';
 import versions from '../data/versions.json';
+import { absoluteBase } from '../consts';
 
 const files = import.meta.glob('../content/guide/**/*.mdx', {
   query: '?raw',
@@ -26,7 +27,7 @@ const pages = new Map(
 );
 
 export const GET: APIRoute = ({ site }) => {
-  const base = (site ?? new URL('http://localhost:4321')).href.replace(/\/$/, '');
+  const base = absoluteBase(site);
   const absolutize = (body: string) =>
     body
       .replace(/(\]\()\/(?!\/)/g, `$1${base}/`)

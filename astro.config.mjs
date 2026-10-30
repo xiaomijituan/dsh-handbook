@@ -26,28 +26,37 @@ const lastmodByPath = new Map(
 );
 
 const site = process.env.SITE_URL;
+const rawBase = process.env.BASE_PATH ?? '/';
+const base = rawBase === '/' ? '/' : `/${rawBase.replace(/^\/+|\/+$/g, '')}`;
+const basePrefix = base === '/' ? '' : base;
 if (process.env.CI && !site) {
   throw new Error('SITE_URL is required in CI/deploy builds');
 }
 if (!site) {
   console.warn('[dsh-handbook] SITE_URL is not set; canonical, robots and sitemap will use localhost.');
 }
+if (basePrefix && !site) {
+  console.warn(`[dsh-handbook] BASE_PATH=${basePrefix} without SITE_URL; SEO URLs will point at localhost.`);
+}
 
 export default defineConfig({
   site: site ?? 'http://localhost:4321',
+  base,
   output: 'static',
   integrations: [
     mdx(),
     sitemap({
-      filter: (page) => !new URL(page).pathname.startsWith('/search/'),
+      filter: (page) => !new URL(page).pathname.startsWith(`${basePrefix}/search/`),
       serialize: (item) => {
-        const lastmod = lastmodByPath.get(new URL(item.url).pathname);
+        const pathname = new URL(item.url).pathname;
+        const key = basePrefix && pathname.startsWith(basePrefix) ? pathname.slice(basePrefix.length) : pathname;
+        const lastmod = lastmodByPath.get(key);
         return lastmod ? { ...item, lastmod } : item;
       },
     }),
   ],
   markdown: {
-    processor: unified({ remarkPlugins: [remarkContentLinks] }),
+    processor: unified({ remarkPlugins: [[remarkContentLinks, { base: basePrefix }]] }),
     shikiConfig: { theme: 'github-dark', wrap: true },
   },
 });

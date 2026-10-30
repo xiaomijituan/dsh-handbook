@@ -6,7 +6,7 @@ import AnswerBox from '../components/AnswerBox.astro';
 import VersionBadge from '../components/VersionBadge.astro';
 import Toc from '../components/Toc.astro';
 import FaqList from '../components/FaqList.astro';
-import { SITE_NAME } from '../consts';
+import { SITE_NAME, withBase } from '../consts';
 
 const { entry, headings } = Astro.props;
 const data = entry.data;
@@ -19,10 +19,10 @@ const slug = slugOf(entry.id);
 const segments = slug.split('/');
 const sectionLabels: Record<string, string> = { install: '安装', plugins: '插件', source: '源码', versions: '版本' };
 const crumbs = [
-  { label: '首页', href: '/' },
+  { label: '首页', href: withBase('/') },
   ...segments.map((segment, index) => ({
     label: index === segments.length - 1 ? (data.crumb ?? data.title) : (sectionLabels[segment] ?? segment),
-    href: index === segments.length - 1 ? undefined : '/' + segments.slice(0, index + 1).join('/') + '/',
+    href: index === segments.length - 1 ? undefined : withBase('/' + segments.slice(0, index + 1).join('/') + '/'),
   })),
 ];
 
@@ -52,7 +52,7 @@ const jsonLd: Record<string, unknown>[] = [
     inLanguage: 'zh-CN',
     author: { '@type': 'Organization', name: 'dsh-handbook' },
     mainEntityOfPage: pageUrl,
-    image: new URL(image, base).href,
+    image: new URL(withBase(image), base).href,
   },
   {
     '@context': 'https://schema.org',
@@ -84,13 +84,13 @@ if (data.faq.length > 0) {
       <h1>{data.title}</h1>
       <VersionBadge verified={data.verified} />
       <AnswerBox text={data.answer} />
-      {stale && <p class="stale-banner">这页的核验日期已超过 30 天，dsh 可能已经变化。以 <a href="/versions/">版本页</a> 与官方文档为准。</p>}
+      {stale && <p class="stale-banner">这页的核验日期已超过 30 天，dsh 可能已经变化。以 <a href={withBase('/versions/')}>版本页</a> 与官方文档为准。</p>}
       <slot />
       {data.faq.length > 0 && <FaqList items={data.faq} />}
       {data.related.length > 0 && (
         <aside class="related">
           <h2>接着读</h2>
-          <ul>{data.related.map((id) => <li><a href={`/${id}/`}>{titleOf(id)}</a></li>)}</ul>
+          <ul>{data.related.map((id) => <li><a href={withBase(`/${id}/`)}>{titleOf(id)}</a></li>)}</ul>
         </aside>
       )}
     </article>

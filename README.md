@@ -55,15 +55,17 @@ npm run check:links      # 站内链接与锚点
 
 ## 部署
 
+- 线上地址：<https://xiaomijituan.github.io/dsh-handbook/>，推送到 `main` 后由 `.github/workflows/deploy.yml` 自动部署
 - 产物是纯静态 `dist/`，可放任意静态主机
+- GitHub Pages 挂在 `/dsh-handbook/` 子路径下，构建时必须设 `BASE_PATH`；以后换成独立域名时去掉 `BASE_PATH`，内容不需要改
 - 部署构建必须设置 `SITE_URL`，否则 canonical、robots 与 sitemap 会写 localhost
 - 内置 `/llms.txt`（站点摘要）与 `/llms-full.txt`（全部正文），给生成式搜索引擎一次读全
 - 分享图在 `/og/*.png`（1200×630）；三张源码图有独立图片 sitemap，与普通 sitemap 一起在 `robots.txt` 声明
 - 分享图由 `npm run seo:og` 重新生成，首页横幅由 `npm run hero` 重新生成，均需要本机安装 Chrome（或设置 `CHROME_PATH`）
-- 国内托管涉及备案；域名确定后再部署
 
 ```bash
-SITE_URL=https://example.com npm run build
+SITE_URL=https://xiaomijituan.github.io BASE_PATH=/dsh-handbook npm run build
+BASE_PATH=/dsh-handbook npm run check:links
 ```
 
 ## 参与

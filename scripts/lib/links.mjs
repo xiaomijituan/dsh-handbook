@@ -21,9 +21,10 @@ function urlPathOf(distDir, file) {
   return relative.replace(/index\.html$/, '').replace(/\.html$/, '');
 }
 
-function resolveTarget(distDir, fromUrlPath, href) {
+function resolveTarget(distDir, fromUrlPath, href, basePrefix = '') {
   const url = new URL(href, `http://local${fromUrlPath}`);
-  const pathname = decodeURIComponent(url.pathname);
+  let pathname = decodeURIComponent(url.pathname);
+  if (basePrefix && pathname.startsWith(basePrefix)) pathname = pathname.slice(basePrefix.length) || '/';
   const absolute = join(distDir, pathname);
   if (existsSync(absolute) && statSync(absolute).isFile()) return absolute;
   if (existsSync(join(absolute, 'index.html'))) return join(absolute, 'index.html');
@@ -31,7 +32,7 @@ function resolveTarget(distDir, fromUrlPath, href) {
   return null;
 }
 
-export function checkDist(distDir) {
+export function checkDist(distDir, { basePrefix = '' } = {}) {
   const broken = [];
   const files = walk(distDir).filter((file) => file.endsWith('.html'));
   const idCache = new Map();
@@ -52,7 +53,7 @@ export function checkDist(distDir) {
     const html = readFileSync(file, 'utf8');
     for (const href of extractHrefs(html)) {
       if (isSkippable(href) || href.startsWith('//')) continue;
-      const target = resolveTarget(distDir, fromUrlPath, href);
+      const target = resolveTarget(distDir, fromUrlPath, href, basePrefix);
       const hash = href.includes('#') ? href.slice(href.indexOf('#') + 1) : '';
       const label = `${fromUrlPath || '/'} -> ${href}`;
       if (!target) {

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { resolveContentUrl } from '../scripts/lib/content-links.mjs';
+import { resolveContentUrl, prefixBase } from '../scripts/lib/content-links.mjs';
 
 const contentDir = '/site/src/content/guide';
 const contentRoot = fileURLToPath(new URL('../src/content/guide/', import.meta.url));
@@ -65,4 +65,11 @@ test('内容文件不使用站内绝对路径链接（GitHub 会解析成 blob �
     }
   }
   assert.deepEqual(offenders, []);
+});
+
+test('子路径部署时给绝对路径加 base，外链与锚点不动', () => {
+  assert.equal(prefixBase('/install/desktop/', '/dsh-handbook'), '/dsh-handbook/install/desktop/');
+  assert.equal(prefixBase('https://example.com/x.png', '/dsh-handbook'), 'https://example.com/x.png');
+  assert.equal(prefixBase('#here', '/dsh-handbook'), '#here');
+  assert.equal(prefixBase('/install/', ''), '/install/');
 });

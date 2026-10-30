@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { absoluteBase } from '../consts';
 
 const images = [
   {
@@ -31,7 +32,7 @@ const escape = (value: string) =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 export const GET: APIRoute = ({ site }) => {
-  const base = (site ?? new URL('http://localhost:4321')).href.replace(/\/$/, '');
+  const base = absoluteBase(site);
   const urls = images
     .map(
       (image) => [

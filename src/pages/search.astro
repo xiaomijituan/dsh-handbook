@@ -1,18 +1,22 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../consts';
 ---
 <BaseLayout title="搜索" description="站内搜索" noindex>
   <div class="container prose" data-pagefind-ignore>
     <h1>站内搜索</h1>
     <p>搜索只在生产构建里可用；本地开发需要先跑一次 <code>npm run build</code>。</p>
-    <link slot="head" rel="stylesheet" href="/pagefind/pagefind-ui.css" />
+    <link slot="head" rel="stylesheet" href={withBase('/pagefind/pagefind-ui.css')} />
     <div id="search"></div>
-    <script is:inline src="/pagefind/pagefind-ui.js"></script>
+    <script is:inline src={withBase('/pagefind/pagefind-ui.js')}></script>
     <script is:inline>
       window.addEventListener('DOMContentLoaded', () => {
         if (window.PagefindUI) {
+          const uiScript = document.querySelector('script[src*="pagefind-ui.js"]');
+          const bundlePath = uiScript ? uiScript.src.replace(/pagefind-ui\.js.*$/, '') : '/pagefind/';
           new window.PagefindUI({
             element: '#search',
+            bundlePath,
             showSubResults: true,
             translations: { placeholder: '搜索安装、插件、报错…' },
           });

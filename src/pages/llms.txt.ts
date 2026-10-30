@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import versions from '../data/versions.json';
+import { absoluteBase } from '../consts';
 
 const groups: { heading: string; slugs: string[] }[] = [
   { heading: '开始', slugs: ['about', 'models', 'troubleshooting'] },
@@ -13,7 +14,7 @@ const groups: { heading: string; slugs: string[] }[] = [
 const slugOf = (id: string) => id.replace(/\/index$/, '');
 
 export const GET: APIRoute = async ({ site }) => {
-  const base = (site ?? new URL('http://localhost:4321')).href.replace(/\/$/, '');
+  const base = absoluteBase(site);
   const entries = await getCollection('guide', ({ data }) => !data.noindex);
   const bySlug = new Map(entries.map((entry) => [slugOf(entry.id), entry]));
 
