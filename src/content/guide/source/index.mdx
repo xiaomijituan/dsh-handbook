@@ -1,15 +1,15 @@
 ---
 title: "读 dsh 源码：三条主线与固定版本"
 crumb: "源码阅读"
-description: "按 dsh-v0.2.1-rc.3 的源码读三条主线：profile 如何变成插件树、一条消息如何走完步骤、一次工具调用如何过关卡。每篇给文件行号与可运行验证。"
-answer: "先读三篇：插件树（组装）、消息生命周期（agent-loop）、工具流水线（tools）。源码固定到 dsh-v0.2.1-rc.3（commit 1f81c04）；行号只对这份源码有效。"
-updated: "2026-10-27T14:00:00+08:00"
+description: "按 dsh-v0.2.1-rc.5 的源码读三条主线：profile 如何变成插件树、一条消息如何走完步骤、一次工具调用如何过关卡。每篇给文件行号与可运行验证。"
+answer: "先读三篇：插件树（组装）、消息生命周期（agent-loop）、工具流水线（tools）。源码固定到 dsh-v0.2.1-rc.5（commit b830ec9）；行号只对这份源码有效。"
+updated: "2026-10-31T14:00:00+08:00"
 verified:
-  dsh: "0.2.1-rc.2"
-  npm_latest: "0.2.1-rc.2"
-  npm_next: "0.2.1-rc.4"
-  gh_tag: "dsh-v0.2.1-rc.3"
-  date: "2026-10-27"
+  dsh: "0.2.1-rc.5"
+  npm_latest: "0.2.1-rc.5"
+  npm_next: "0.2.1-rc.5"
+  gh_tag: "dsh-v0.2.1-rc.5"
+  date: "2026-10-31"
   os: ["windows", "macos", "linux"]
 difficulty: "advanced"
 keywords: ["deepseek harness 源码", "dsh 源码阅读", "cordis 插件树", "dsh agent loop"]
@@ -18,7 +18,7 @@ faq:
   - q: "读源码前要先会什么？"
     a: "会用 dsh 启动 Web UI、知道 profile 和插件的基本概念即可。Cordis 的五个概念可以在第一篇里边读边补，不需要先通读框架文档。"
   - q: "为什么文章里的行号不是最新的？"
-    a: "源码行号会随版本移动。这三篇固定到 dsh-v0.2.1-rc.3（commit 1f81c04），每页头部写明核验日期；升级后行号可能失效，文件路径与函数名更稳定。"
+    a: "源码行号会随版本移动。这三篇固定到 dsh-v0.2.1-rc.5（commit b830ec9），每页头部写明核验日期；升级后行号可能失效，文件路径与函数名更稳定。"
   - q: "源码文章和官方文档有什么区别？"
     a: "官方文档定义接口与设计约束；这里按一次真实运行的顺序把文件串起来，补上先看哪、为什么这样排、怎么自己验证。"
 ---
@@ -53,14 +53,14 @@ faq:
 
 三篇的行号固定在一份源码上：
 
-- 源码标签：`dsh-v0.2.1-rc.3`
-- commit：`1f81c047fc48fa190a683e469daa699857e9afe8`
-- npm `latest`：`0.2.1-rc.2`
-- npm `next`：`0.2.1-rc.4`
+- 源码标签：`dsh-v0.2.1-rc.5`
+- commit：`b830ec950faba0a46dda564be3e2d854afed94f1`
+- npm `latest`：`0.2.1-rc.5`
+- npm `next`：`0.2.1-rc.5`（当前与 latest 指向同一个版本）
 
-也就是说，源码读的是 rc.3，命令却在 rc.2 上实跑；`next` 线已经到 rc.4。三个通道不会自动同步，[版本页](../versions.mdx)有完整的对照。行号只对上面列出的那一个 commit 有效，文件路径和函数名通常比行号变化得慢。
+源码与命令都核验在 rc.5。2026-10-31 这一轮把源码坐标从 rc.3 换到 rc.5：三篇引用的 20 个文件在两个 tag 之间没有任何改动，行号与结论因此不变；换坐标是为了让你点开链接时看到当前版本。[版本页](../versions.mdx)有通道对照。行号只对上面列出的那一个 commit 有效，文件路径和函数名通常比行号变化得慢。
 
-每条源码链接都指向 commit `1f81c047fc48fa190a683e469daa699857e9afe8` 的 GitHub blob，而不是 `main`。这样即使上游继续合并提交，你点开的仍然是文章写作时读的那份代码。
+每条源码链接都指向 commit `b830ec950faba0a46dda564be3e2d854afed94f1` 的 GitHub blob，而不是 `main`。这样即使上游继续合并提交，你点开的仍然是文章写作时读的那份代码。
 
 ## 每篇的三步读法
 
@@ -73,19 +73,19 @@ faq:
 ## 实验环境
 
 - Windows 11（10.0.26200），Node 24.18.0，npm 11.16.0
-- `dsh` 0.2.1-rc.2，通过 `npx -y @deepseek-ai/dsh@0.2.1-rc.2` 运行
-- 源码：`dsh-v0.2.1-rc.3` 的 codeload 压缩包，解压后按 tag 对应的 commit 核对
+- `dsh` 0.2.1-rc.5，通过 `npx -y @deepseek-ai/dsh@0.2.1-rc.5` 运行
+- 源码：`dsh-v0.2.1-rc.5` 的 codeload 压缩包，解压后按 tag 对应的 commit 核对
 - 需要 pnpm 的命令单独标注；`dsh plugin` 会把参数转发给 profile 目录里的 pnpm
 
 不需要模型 Key 的实验包括 `--dump-config`、源码 grep 和插件加载日志。需要模型 Key 的实验会明确写出，不把“没有运行过”写成“已经运行过”。
 
 ## 官方文档对应位置
 
-- [架构总览](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)：profile、组合包、轮次流程、能力 seam
-- [Cordis 入门](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/cordis-primer.zh.md)：插件、上下文、服务依赖、waterfall
-- [Agent 轮次与步骤生命周期](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/agent-lifecycle.zh.md)：时序图与事件清单
-- [工具执行流水线](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/tool-execution-pipeline.zh.md)：策略、守卫、审批与结果重写
-- [安全边界](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/SAFETY.md)：沙箱、审批与信任模型
+- [架构总览](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/docs/architecture.zh.md)：profile、组合包、轮次流程、能力 seam
+- [Cordis 入门](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/docs/cordis-primer.zh.md)：插件、上下文、服务依赖、waterfall
+- [Agent 轮次与步骤生命周期](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/docs/agent-lifecycle.zh.md)：时序图与事件清单
+- [工具执行流水线](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/docs/tool-execution-pipeline.zh.md)：策略、守卫、审批与结果重写
+- [安全边界](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/SAFETY.md)：沙箱、审批与信任模型
 
 三篇是官方文档的补充读法，不替代官方文档。接口签名、配置字段和设计决策以官方文档为准；三篇负责把顺序讲清楚，并给出可以自己复核的入口。
 

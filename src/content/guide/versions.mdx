@@ -1,15 +1,15 @@
 ---
 title: "dsh 版本对照：npm dist-tags 与 GitHub tag"
 crumb: "版本"
-description: "解释 npm latest、next、alpha 与 GitHub tag 的关系，说明为什么 npx 装的不是最新版，以及升级和跟进破坏性变更的方法。"
-answer: "截至 2026-10-27：npm latest 是 0.2.1-rc.2，next 是 0.2.1-rc.4，alpha 是 0.2.1-alpha.5；GitHub 最新 tag 是 dsh-v0.2.1-rc.3。npx 默认装 latest，不是 next。"
-updated: "2026-10-27"
+description: "解释 npm latest、next、alpha 与 GitHub tag 的关系，说明 npx 默认装哪个版本，以及升级和跟进破坏性变更的方法。"
+answer: "截至 2026-10-31：npm latest 与 next 都指向 0.2.1-rc.5，alpha 是 0.2.2-alpha.2；GitHub 最新 tag 是 dsh-v0.2.1-rc.5。npx 默认装 latest；latest 与 next 当前指向同一个版本，这是发布节奏造成的，不是常态。"
+updated: "2026-10-31"
 verified:
-  dsh: "0.2.1-rc.2"
-  npm_latest: "0.2.1-rc.2"
-  npm_next: "0.2.1-rc.4"
-  gh_tag: "dsh-v0.2.1-rc.3"
-  date: "2026-10-27"
+  dsh: "0.2.1-rc.5"
+  npm_latest: "0.2.1-rc.5"
+  npm_next: "0.2.1-rc.5"
+  gh_tag: "dsh-v0.2.1-rc.5"
+  date: "2026-10-31"
   os: ["windows", "macos", "linux"]
 difficulty: "intermediate"
 keywords: ["deepseek harness 版本", "dsh 版本", "npm dist-tags"]
@@ -18,14 +18,14 @@ related: ["install/npx", "troubleshooting"]
 
 ## 当前版本号
 
-2026-10-27 核验到的状态：
+2026-10-31 核验到的状态：
 
-- **npm latest**：`0.2.1-rc.2` —— 用 `npx` 安装时默认拿到的版本
-- **npm next**：`0.2.1-rc.4` —— 比 latest 更新的预发布版本
-- **npm alpha**：`0.2.1-alpha.5` —— 更早的 alpha
-- **GitHub tag**：`dsh-v0.2.1-rc.3` —— 仓库 release 的最新 tag
+- **npm latest**：`0.2.1-rc.5` —— 用 `npx` 安装时默认拿到的版本
+- **npm next**：`0.2.1-rc.5` —— 当前与 latest 指向同一个版本；两个标签并不保证一直相同
+- **npm alpha**：`0.2.2-alpha.2` —— 已经走到下一个次版本的 alpha 线
+- **GitHub tag**：`dsh-v0.2.1-rc.5` —— 仓库 release 的最新 tag
 
-上面四个版本号不在同一条发布线上，也不会自动同步。`latest`、`next`、`alpha` 是 npm 的发布标签；GitHub tag 由另一套发布动作产生，发布时间和内容都可能与 npm 不同。
+上面四个版本号不在同一条发布线上，也不会自动同步。`latest`、`next`、`alpha` 是 npm 的发布标签；GitHub tag 由另一套发布动作产生，发布时间和内容都可能与 npm 不同。这次 latest 与 next 重合、tag 又刚好等于 latest，是发布节奏的结果；下一次发布就可能重新分开，所以引用版本号时要写出具体版本，不要只写通道名。
 
 ## npx 默认安装 latest 的原因
 
@@ -36,10 +36,11 @@ npx @deepseek-ai/dsh web
 npx @deepseek-ai/dsh@latest web
 ```
 
-这两条命令拿到的都是 `0.2.1-rc.2`，不是 `next` 上的 `0.2.1-rc.4`。想装 next 上的版本，命令里必须显式写出 `@next`：
+这两条命令拿到的都是 latest 指向的 `0.2.1-rc.5`。本页核验时 `next` 恰好也指向同一个版本，但两个标签并不保证相同；想明确选择通道，就在命令里写出标签：
 
 ```bash
 npx @deepseek-ai/dsh@next web
+npx @deepseek-ai/dsh@alpha web
 ```
 
 要确认各通道当前的版本号，用下面这条命令向 npm 查询：
@@ -50,12 +51,12 @@ npm view @deepseek-ai/dsh dist-tags
 
 ## 版本号的各段含义
 
-`0.2.1-rc.2` 分成四段，每段的含义：
+`0.2.1-rc.5` 分成四段，每段的含义：
 
 - `0`：主版本。官方仍处于 developer preview，主版本停在 0，破坏性变更随时可能出现。
 - `2`：次版本。次版本变化通常包含功能调整。
 - `1`：补丁版本。
-- `rc.2`：预发布标记。`alpha` 更早，`rc` 更接近稳定。
+- `rc.5`：预发布标记。`alpha` 更早，`rc` 更接近稳定。
 
 同一个次版本内，预发布序号越大代表版本越新；跨次版本时不要只比较数字大小，要先看 release 说明。
 
@@ -64,7 +65,7 @@ npm view @deepseek-ai/dsh dist-tags
 最可控的做法是把版本号直接写进命令：
 
 ```bash
-npx @deepseek-ai/dsh@0.2.1-rc.4 web --no-open
+npx @deepseek-ai/dsh@0.2.1-rc.5 web --no-open
 ```
 
 长期使用建议下面三条：

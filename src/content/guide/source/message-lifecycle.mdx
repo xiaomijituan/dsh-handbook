@@ -3,13 +3,13 @@ title: "一条消息怎样变成一个步骤：dsh 的 turn/step 生命周期"
 crumb: "消息生命周期"
 description: "沿着 ReactLoopAgent.turn() 与 step() 读一遍：消息如何进入 inbox、pre-step 如何决定接纳、system/user 消息何时写日志、请求如何冻结、工具结果如何结算。"
 answer: "一个轮次包含零个或多个步骤。每一步：领取输入 → agent/pre-step → 组装提示词 → prepareCall → 写 system/user 消息 → 冻结请求 → 流式返回 → 执行工具 → 写 tool/result → step/end；轮次末尾写 turn/end。"
-updated: "2026-10-27T14:00:00+08:00"
+updated: "2026-10-31T14:00:00+08:00"
 verified:
-  dsh: "0.2.1-rc.2"
-  npm_latest: "0.2.1-rc.2"
-  npm_next: "0.2.1-rc.4"
-  gh_tag: "dsh-v0.2.1-rc.3"
-  date: "2026-10-27"
+  dsh: "0.2.1-rc.5"
+  npm_latest: "0.2.1-rc.5"
+  npm_next: "0.2.1-rc.5"
+  gh_tag: "dsh-v0.2.1-rc.5"
+  date: "2026-10-31"
   os: ["windows", "macos", "linux"]
 difficulty: "advanced"
 keywords: ["deepseek harness agent loop", "dsh turn step", "dsh inbox", "dsh 源码"]
@@ -36,16 +36,16 @@ faq:
 
 ## 源码坐标
 
-- [`agent.ts:298-399`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L298-L399) — `turn()`：turn/start、pre-step、step 循环、turn-stopping、turn/end
-- [`agent.ts:267-289`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L267-L289) — `preStep()`：调用 `agent/pre-step`，拿到 reject 或 enter
-- [`agent.ts:400-441`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L400-L441) — `step()` 前半：渲染提示词、提交系统消息、接纳用户消息
-- [`agent.ts:564-615`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L564-L615) — `prepareRequest()`：`agent/request` 与 `llm.prepareCall()`
-- [`agent.ts:616-700`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/agent.ts#L616-L700) — `buildRequest()`：request/header、request/context、冻结请求
-- [`inbox.ts:109-113`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/inbox.ts#L109-L113) — `claim()`：next-step 与 next-turn 的领取规则
-- [`system-prompt/src/index.ts:20-32`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/system-prompt/src/index.ts#L20-L32) — `system-prompt/assemble` waterfall
-- [`tool-calls.ts:60-113`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/tool-calls.ts#L60-L113) — `executeToolCalls()`：屏障、滚动池、按模型顺序提交
-- [`session/src/index.ts:984-1011`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/session/src/index.ts#L984-L1011) — `deriveMessages()`：从日志折叠模型历史
-- [`llm/src/index.ts:956-964`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/llm/llm/src/index.ts#L956-L964) — `prepareCall()`：绑定适配器与调用能力
+- [`agent.ts:298-399`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/agent-loop/src/agent.ts#L298-L399) — `turn()`：turn/start、pre-step、step 循环、turn-stopping、turn/end
+- [`agent.ts:267-289`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/agent-loop/src/agent.ts#L267-L289) — `preStep()`：调用 `agent/pre-step`，拿到 reject 或 enter
+- [`agent.ts:400-441`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/agent-loop/src/agent.ts#L400-L441) — `step()` 前半：渲染提示词、提交系统消息、接纳用户消息
+- [`agent.ts:564-615`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/agent-loop/src/agent.ts#L564-L615) — `prepareRequest()`：`agent/request` 与 `llm.prepareCall()`
+- [`agent.ts:616-700`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/agent-loop/src/agent.ts#L616-L700) — `buildRequest()`：request/header、request/context、冻结请求
+- [`inbox.ts:109-113`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/agent-loop/src/inbox.ts#L109-L113) — `claim()`：next-step 与 next-turn 的领取规则
+- [`system-prompt/src/index.ts:20-32`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/system-prompt/src/index.ts#L20-L32) — `system-prompt/assemble` waterfall
+- [`tool-calls.ts:60-113`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/agent-loop/src/tool-calls.ts#L60-L113) — `executeToolCalls()`：屏障、滚动池、按模型顺序提交
+- [`session/src/index.ts:984-1011`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/session/src/index.ts#L984-L1011) — `deriveMessages()`：从日志折叠模型历史
+- [`llm/src/index.ts:956-964`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/llm/llm/src/index.ts#L956-L964) — `prepareCall()`：绑定适配器与调用能力
 
 ## 先分清三个边界
 
@@ -108,7 +108,7 @@ Inbox 的变更会以 `agent/inbox/spliced` 事件写进 Session 日志。恢复
 
 `startsRequestSeries` 是一个容易被包装监听器弄丢的字段。`startsRequestSeries` 传给 loop 的信息是：本次 enter 要开启一个新的请求序列，需要记录新的 `request/header`。如果包装监听器用 `{ ...decision, messages }` 重建决策，重建的结果要包含 `startsRequestSeries`；否则新序列的标记会被静默丢掉。
 
-压缩（compaction）也挂在 `agent/pre-step` 事件上。`dsh-compaction-basic` 在派生请求之前通过 `agent/pre-step` 处理上下文压力；恢复时仍在同一个打开的 step 内，只有剪枝或摘要推进了 surface replacement generation，压缩才会重试。压缩挂接 `agent/pre-step` 的完整说明在[架构总览的轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)里。
+压缩（compaction）也挂在 `agent/pre-step` 事件上。`dsh-compaction-basic` 在派生请求之前通过 `agent/pre-step` 处理上下文压力；恢复时仍在同一个打开的 step 内，只有剪枝或摘要推进了 surface replacement generation，压缩才会重试。压缩挂接 `agent/pre-step` 的完整说明在[架构总览的轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/docs/architecture.zh.md)里。
 
 ## 组装提示词：一次，重试复用
 
@@ -141,7 +141,7 @@ Inbox 的变更会以 `agent/inbox/spliced` 事件写进 Session 日志。恢复
 
 这套顺序实现了“模型可见即已记录”：请求不是从局部变量拼出来的，而是从 Session 日志推导出来的。下一次恢复、fork 或重放读同一份 Session 日志，就能得到同一份历史。
 
-`system/message` 的处理比单纯追加一条消息更复杂。提示词可能按版本替换、在缓存前缀之后追加更新，或者在不支持更新的路由上归并到首个系统节点。规则在[架构总览的轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)和 `packages/core/agent-loop/README.zh.md` 里；用一句话概括：`system/message` 的提交发生在 `buildRequest()` 之前，Session 日志是唯一来源。
+`system/message` 的处理比单纯追加一条消息更复杂。提示词可能按版本替换、在缓存前缀之后追加更新，或者在不支持更新的路由上归并到首个系统节点。规则在[架构总览的轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/docs/architecture.zh.md)和 `packages/core/agent-loop/README.zh.md` 里；用一句话概括：`system/message` 的提交发生在 `buildRequest()` 之前，Session 日志是唯一来源。
 
 ## 流式结算：message 还是 attempt
 
@@ -220,9 +220,9 @@ dsh --profile web --dump-config | grep -A6 "id: agent-loop"
 
 ## 官方文档对应位置
 
-- [Agent 轮次与步骤生命周期](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/agent-lifecycle.zh.md)：时序图、事件清单、压缩与重试
-- [架构总览：轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)：turn、step、请求构建与系统提示词规则
-- [agent-loop README](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/README.zh.md)：实现顺序、取消与错误恢复
-- [session README](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/session/README.zh.md)：日志、派生历史与持久化
+- [Agent 轮次与步骤生命周期](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/docs/agent-lifecycle.zh.md)：时序图、事件清单、压缩与重试
+- [架构总览：轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/docs/architecture.zh.md)：turn、step、请求构建与系统提示词规则
+- [agent-loop README](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/agent-loop/README.zh.md)：实现顺序、取消与错误恢复
+- [session README](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/session/README.zh.md)：日志、派生历史与持久化
 
 下一篇进入工具内部：[一次工具调用要过哪些关卡](./tool-pipeline.mdx)。

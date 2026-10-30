@@ -3,13 +3,13 @@ title: "DeepSeek Harness 插件：先装什么，怎么判断靠不靠谱"
 crumb: "插件"
 description: "解释 dsh 的 bundle、profile 与插件关系，说明插件索引不是内置的，并给出判断第三方插件是否值得安装的检查清单。"
 answer: "dsh 的插件以 bundle 形式组合进 profile。DSH 不内置第三方插件索引，“发现”需要开启实验性的自定义插件索引并自己添加索引 URL；第三方插件未实测不收录。"
-updated: "2026-10-27"
+updated: "2026-10-31"
 verified:
-  dsh: "0.2.1-rc.2"
-  npm_latest: "0.2.1-rc.2"
-  npm_next: "0.2.1-rc.4"
-  gh_tag: "dsh-v0.2.1-rc.3"
-  date: "2026-10-27"
+  dsh: "0.2.1-rc.5"
+  npm_latest: "0.2.1-rc.5"
+  npm_next: "0.2.1-rc.5"
+  gh_tag: "dsh-v0.2.1-rc.5"
+  date: "2026-10-31"
   os: ["windows", "macos"]
 difficulty: "beginner"
 keywords: ["deepseek harness 插件", "dsh 插件推荐", "deepseek harness bundle"]
@@ -30,7 +30,7 @@ dsh 的设计是“一切皆插件”：模型适配器、工具、会话日志�
 
 ## 第一批插件从自带组合包开始
 
-dsh 的 web profile 自带插件管理器等基础 bundle，这些 bundle 不需要额外安装就能用。2026-10-27 用 `--dump-config` 导出的 profile 里能看到：
+dsh 的 web profile 自带插件管理器等基础 bundle，这些 bundle 不需要额外安装就能用。2026-10-31 用 `--dump-config` 导出的 profile 里能看到：
 
 ```text
 - id: plugin-manager
@@ -62,7 +62,7 @@ DSH 不内置任何第三方插件索引源。官方文档写明：要浏览和�
 3. **维护状态**：最近一次更新是什么时候，仓库是否公开。
 4. **权限**：插件会以你的权限运行，能读文件、执行命令。来源不明的插件不要装。
 
-本站的第三方插件表只收录实际装过、并且记录过版本的插件条目。截至 2026-10-27，第三方插件实测还没有完成，因此不列推荐；“20 个必装”这类清单在没有实测记录之前无法核对。
+本站的第三方插件表只收录实际装过、并且记录过版本的插件条目。截至 2026-10-31，第三方插件实测还没有完成，因此不列推荐；“20 个必装”这类清单在没有实测记录之前无法核对。
 
 ## 三种情况下自己写插件更合适
 

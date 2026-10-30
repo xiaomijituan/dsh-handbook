@@ -3,13 +3,13 @@ title: "写第一个插件：从加载到注册工具"
 crumb: "第一个插件"
 description: "用一个最小插件验证加载，再打包成 bundle 安装进 profile，最后按官方 cookbook 注册一个模型可调用的工具。"
 answer: "最小插件只需导出 name 与 apply()。先用 --patch 覆盖层确认日志出现 plugin loaded，再打包成 bundle 用 dsh plugin add 安装。注册工具还需要 @deepseek-ai/dsh-tools。"
-updated: "2026-10-27"
+updated: "2026-10-31"
 verified:
-  dsh: "0.2.1-rc.2"
-  npm_latest: "0.2.1-rc.2"
-  npm_next: "0.2.1-rc.4"
-  gh_tag: "dsh-v0.2.1-rc.3"
-  date: "2026-10-27"
+  dsh: "0.2.1-rc.5"
+  npm_latest: "0.2.1-rc.5"
+  npm_next: "0.2.1-rc.5"
+  gh_tag: "dsh-v0.2.1-rc.5"
+  date: "2026-10-31"
   os: ["windows", "macos"]
 difficulty: "advanced"
 keywords: ["deepseek harness 插件开发", "dsh 插件 教程", "dsh-plugin"]
@@ -52,7 +52,7 @@ dsh web --patch ./hello.patch.yml
 [hello-plugin] plugin loaded!
 ```
 
-2026-10-27 在 Windows 上实测：执行 `npx @deepseek-ai/dsh@0.2.1-rc.2 web --patch ... --no-open`，7 秒后打印加载日志。
+2026-10-31 在 Windows 上实测：执行 `npx @deepseek-ai/dsh@0.2.1-rc.5 web --patch ... --no-open`，约 20 秒后打印加载日志。
 
 > patch 文件里的 `name` 不会按“相对于 patch 文件所在目录”来解析；写成相对路径会找不到模块。先执行 `pwd` 打印当前目录，再拼出绝对路径。
 

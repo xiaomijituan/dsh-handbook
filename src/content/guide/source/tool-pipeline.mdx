@@ -3,13 +3,13 @@ title: "一次工具调用要过哪些关卡"
 crumb: "工具流水线"
 description: "从 createExecution() 到 tools/result，逐段读 dsh 的工具执行流水线：策略、审批、单调守卫、环绕分发、内容投影、后置策略与最终冻结。"
 answer: "顺序是 createExecution → tools/pre-execute → approval（仅 ask）→ 单调 guards → tools/execute → 工具正文 → projectContent → tools/post-execute → finalizeContent → tools/result。拒绝和失败也是结果，不是异常。"
-updated: "2026-10-27T14:00:00+08:00"
+updated: "2026-10-31T14:00:00+08:00"
 verified:
-  dsh: "0.2.1-rc.2"
-  npm_latest: "0.2.1-rc.2"
-  npm_next: "0.2.1-rc.4"
-  gh_tag: "dsh-v0.2.1-rc.3"
-  date: "2026-10-27"
+  dsh: "0.2.1-rc.5"
+  npm_latest: "0.2.1-rc.5"
+  npm_next: "0.2.1-rc.5"
+  gh_tag: "dsh-v0.2.1-rc.5"
+  date: "2026-10-31"
   os: ["windows", "macos", "linux"]
 difficulty: "advanced"
 keywords: ["deepseek harness 工具调用", "dsh tools 源码", "dsh 权限 审批", "dsh post-execute"]
@@ -36,18 +36,18 @@ faq:
 
 ## 源码坐标
 
-- [`tools/src/index.ts:1399-1492`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1399-L1492) — `createExecution()`：参数快照、token/callId、捕获 finalizer
-- [`tools/src/index.ts:1501-1548`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1501-L1548) — `prepareExecution()`：pre-execute、ask 解析、guard 检查
-- [`tools/src/index.ts:1735-1775`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1735-L1775) — `serviceAsk()`：审批结果如何映射成 allow/deny
-- [`tools/src/index.ts:1144-1162`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1144-L1162) — `guard()` 与 `guardReason()`：单调守卫的注册与检查
-- [`tools/src/index.ts:1609-1641`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1609-L1641) — `dispatchScheduledExecution()`：`tools/execute` 环绕与结果规范化
-- [`tools/src/index.ts:1572-1600`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1572-L1600) — `dispatchToolBody()`：调用注册的工具正文
-- [`tools/src/index.ts:1649-1671`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1649-L1671) — `finalizeScheduledExecution()`：projectContent 在 post-execute 之前
-- [`tools/src/index.ts:1789-1811`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1789-L1811) — `postExecute()`：accept、block、替换内容、附加上下文
-- [`tools/src/index.ts:1677-1725`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/src/index.ts#L1677-L1725) — `finishScheduledExecution()`、`applyFinalContent()`、`notifyResult()`
-- [`tool-calls.ts:60-113`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/tool-calls.ts#L60-L113) — agent loop 的工具调度：屏障、滚动池、模型顺序提交
-- [`tool-calls.ts:264`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/tool-calls.ts#L264) — 执行前写 `tool/call`
-- [`tool-calls.ts:282`](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/agent-loop/src/tool-calls.ts#L282) — 按模型顺序写 `tool/result`
+- [`tools/src/index.ts:1399-1492`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/tools/src/index.ts#L1399-L1492) — `createExecution()`：参数快照、token/callId、捕获 finalizer
+- [`tools/src/index.ts:1501-1548`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/tools/src/index.ts#L1501-L1548) — `prepareExecution()`：pre-execute、ask 解析、guard 检查
+- [`tools/src/index.ts:1735-1775`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/tools/src/index.ts#L1735-L1775) — `serviceAsk()`：审批结果如何映射成 allow/deny
+- [`tools/src/index.ts:1144-1162`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/tools/src/index.ts#L1144-L1162) — `guard()` 与 `guardReason()`：单调守卫的注册与检查
+- [`tools/src/index.ts:1609-1641`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/tools/src/index.ts#L1609-L1641) — `dispatchScheduledExecution()`：`tools/execute` 环绕与结果规范化
+- [`tools/src/index.ts:1572-1600`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/tools/src/index.ts#L1572-L1600) — `dispatchToolBody()`：调用注册的工具正文
+- [`tools/src/index.ts:1649-1671`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/tools/src/index.ts#L1649-L1671) — `finalizeScheduledExecution()`：projectContent 在 post-execute 之前
+- [`tools/src/index.ts:1789-1811`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/tools/src/index.ts#L1789-L1811) — `postExecute()`：accept、block、替换内容、附加上下文
+- [`tools/src/index.ts:1677-1725`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/tools/src/index.ts#L1677-L1725) — `finishScheduledExecution()`、`applyFinalContent()`、`notifyResult()`
+- [`tool-calls.ts:60-113`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/agent-loop/src/tool-calls.ts#L60-L113) — agent loop 的工具调度：屏障、滚动池、模型顺序提交
+- [`tool-calls.ts:264`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/agent-loop/src/tool-calls.ts#L264) — 执行前写 `tool/call`
+- [`tool-calls.ts:282`](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/agent-loop/src/tool-calls.ts#L282) — 按模型顺序写 `tool/result`
 
 ## 先看一张顺序表
 
@@ -187,7 +187,7 @@ grep -n "'tools/pre-execute'\|'tools/execute'\|'tools/post-execute'\|'tools/resu
   packages/core/tools/src/index.ts
 ```
 
-在 `dsh-v0.2.1-rc.3` 上，预期是第 154、165、177、199 行。行号会随版本移动，函数名和事件名更稳定。
+在 `dsh-v0.2.1-rc.5` 上，预期是第 154、165、177、199 行。行号会随版本移动，函数名和事件名更稳定。
 
 想要观察真实调用，你可以装一个只读的钩子插件：
 
@@ -233,9 +233,9 @@ dsh --profile pipeline web --no-open
 
 ## 官方文档对应位置
 
-- [工具执行流水线](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/tool-execution-pipeline.zh.md)：策略、守卫、审批、结果重写与最终观察
-- [tools README](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/core/tools/README.zh.md)：注册、调度、取消与结果契约
-- [架构总览：事件](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)：会话事件、Agent 事件与能力事件的分工
-- [安全边界](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/SAFETY.md)：沙箱、审批与信任模型
+- [工具执行流水线](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/docs/tool-execution-pipeline.zh.md)：策略、守卫、审批、结果重写与最终观察
+- [tools README](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/core/tools/README.zh.md)：注册、调度、取消与结果契约
+- [架构总览：事件](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/docs/architecture.zh.md)：会话事件、Agent 事件与能力事件的分工
+- [安全边界](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/SAFETY.md)：沙箱、审批与信任模型
 
 上一篇：[一条消息怎样变成一个步骤](./message-lifecycle.mdx)。如果还没读插件树，建议先看[一切皆插件](./plugin-tree.mdx)，那一页解释了 `ctx.tools` 注册表是怎么被挂载出来的。

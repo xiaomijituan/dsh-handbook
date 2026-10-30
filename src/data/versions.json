@@ -1,88 +1,88 @@
 {
-  "checkedAt": "2026-10-27T06:27:28.675Z",
+  "checkedAt": "2026-10-30T17:28:33.182Z",
   "npm": {
-    "latest": "0.2.1-rc.2",
-    "next": "0.2.1-rc.4",
-    "alpha": "0.2.1-alpha.5"
+    "latest": "0.2.1-rc.5",
+    "next": "0.2.1-rc.5",
+    "alpha": "0.2.2-alpha.2"
   },
   "github": {
-    "tag": "dsh-v0.2.1-rc.3"
+    "tag": "dsh-v0.2.1-rc.5"
   },
   "pages": [
     {
       "id": "about",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "install/desktop",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "install",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "install/npx",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "install/source",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "models",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "plugins/first-plugin",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "plugins",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "plugins/install",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "source",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "source/message-lifecycle",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "source/plugin-tree",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "source/tool-pipeline",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "troubleshooting",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     },
     {
       "id": "versions",
-      "dsh": "0.2.1-rc.2",
-      "date": "2026-10-27"
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
     }
   ]
 }

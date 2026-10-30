@@ -2,14 +2,14 @@
 title: "DeepSeek Harness 桌面版：Windows 与 macOS 安装"
 crumb: "桌面版"
 description: "官方桌面版的下载地址、Windows 与 macOS 安装步骤、首次启动配置 API Key，以及 SmartScreen 与 Gatekeeper 的处理方式。"
-answer: "从 DeepSeek 官网下载对应安装包：Windows 是 exe，macOS 是 dmg。安装后首次启动填入 API Key。2026-10-27 核验时两个下载地址均返回 200，安装器未在本机实测。"
-updated: "2026-10-27"
+answer: "从 DeepSeek 官网下载对应安装包：Windows 是 exe，macOS 是 dmg。安装后首次启动填入 API Key。2026-10-31 核验时两个下载地址均返回 200，安装器未在本机实测。"
+updated: "2026-10-31"
 verified:
-  dsh: "0.2.1-rc.2"
-  npm_latest: "0.2.1-rc.2"
-  npm_next: "0.2.1-rc.4"
-  gh_tag: "dsh-v0.2.1-rc.3"
-  date: "2026-10-27"
+  dsh: "0.2.1-rc.5"
+  npm_latest: "0.2.1-rc.5"
+  npm_next: "0.2.1-rc.5"
+  gh_tag: "dsh-v0.2.1-rc.5"
+  date: "2026-10-31"
   os: ["windows", "macos"]
 difficulty: "beginner"
 keywords: ["deepseek harness 桌面版", "dsh 桌面版 下载", "deepseek harness windows"]
@@ -20,12 +20,12 @@ related: ["install/npx", "models"]
 
 官方下载页是 [deepseek.com/harness](https://www.deepseek.com/harness/)。下载页上的链接直接指向文件本身（这类链接叫直链），文件名带 `latest`：官方发布新版本后，同一地址指向的就是新文件，因此直链不是固定版本的归档链接。
 
-2026-10-27 核验到的直链与文件信息：
+2026-10-31 核验到的直链与文件信息：
 
-- **Windows x64**：[dsh-latest-windows-x64.exe](https://download.deepseek.com/desktop/dsh-latest-windows-x64.exe) —— 289,415,960 字节（约 276 MB），更新于 2026-10-24
-- **macOS arm64**：[dsh-latest-macos-arm64.dmg](https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg) —— 264,791,658 字节（约 252 MB），更新于 2026-10-24
+- **Windows x64**：[dsh-latest-windows-x64.exe](https://download.deepseek.com/desktop/dsh-latest-windows-x64.exe) —— 289,408,544 字节（约 276 MB），更新于 2026-10-30
+- **macOS arm64**：[dsh-latest-macos-arm64.dmg](https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg) —— 264,979,523 字节（约 253 MB），更新于 2026-10-30
 
-2026-10-27 核验时，两个地址都返回 HTTP 200，响应头 `content-type` 分别是 Windows 可执行文件与 macOS 磁盘映像。安装包较大，网络不稳时你可以用支持断点续传的下载工具重新下载。
+2026-10-31 核验时，两个地址都返回 HTTP 200，响应头 `content-type` 分别是 Windows 可执行文件与 macOS 磁盘映像。安装包较大，网络不稳时你可以用支持断点续传的下载工具重新下载。
 
 ## Windows 安装
 

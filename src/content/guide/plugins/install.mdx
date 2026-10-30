@@ -3,13 +3,13 @@ title: "dsh 插件安装与排错：三种入口和一张症状表"
 crumb: "插件安装"
 description: "覆盖 Web UI、命令行与本地路径三种插件安装入口，解释 profile 与 pnpm 依赖，并给出装不上、装完不显示等问题的排查表。"
 answer: "三种入口：Web UI 的插件页、命令行 dsh plugin、以及本地路径安装。命令行必须能找到 pnpm；装完不显示多半是装进了别的 profile。"
-updated: "2026-10-27"
+updated: "2026-10-31"
 verified:
-  dsh: "0.2.1-rc.2"
-  npm_latest: "0.2.1-rc.2"
-  npm_next: "0.2.1-rc.4"
-  gh_tag: "dsh-v0.2.1-rc.3"
-  date: "2026-10-27"
+  dsh: "0.2.1-rc.5"
+  npm_latest: "0.2.1-rc.5"
+  npm_next: "0.2.1-rc.5"
+  gh_tag: "dsh-v0.2.1-rc.5"
+  date: "2026-10-31"
   os: ["windows", "macos"]
 difficulty: "intermediate"
 keywords: ["deepseek harness 插件安装", "dsh 插件 报错", "dsh plugin"]
@@ -44,7 +44,7 @@ dsh plugin --profile web list
 dsh plugin --profile web remove <package>
 ```
 
-**实测问题：PATH 里必须先有 pnpm。** 2026-10-27 在 Windows 上执行 `dsh plugin --profile web list`，因为本机没有 pnpm，命令直接失败：
+**实测问题：PATH 里必须先有 pnpm。** 2026-10-31 在 Windows 上执行 `dsh plugin --profile web list`，因为本机没有 pnpm，命令直接失败：
 
 ```text
 'pnpm' 不是内部或外部命令，也不是可运行的程序或批处理文件。
