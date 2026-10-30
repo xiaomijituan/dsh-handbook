@@ -10,6 +10,8 @@
 
 > 社区项目，与 DeepSeek 官方无关。官方文档面向贡献者，本仓库补上手路径、排错与版本现状。
 
+**在线阅读：<https://xiaomijituan.github.io/dsh-handbook/>**
+
 ## 内容
 
 - 安装：[选型](src/content/guide/install/index.mdx) · [桌面版](src/content/guide/install/desktop.mdx) · [npx](src/content/guide/install/npx.mdx) · [源码](src/content/guide/install/source.mdx)
