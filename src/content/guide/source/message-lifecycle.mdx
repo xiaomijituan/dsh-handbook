@@ -16,7 +16,7 @@ keywords: ["deepseek harness agent loop", "dsh turn step", "dsh inbox", "dsh 源
 related: ["source/plugin-tree", "source/tool-pipeline", "plugins/install"]
 faq:
   - q: "turn 和 step 有什么区别？"
-    a: "turn 是一次连续工作：从领取首条输入开始，到不再欠任何工作结束；一个 turn 可以包含零个或多个 step。step 是一次模型请求加上它调用的工具。"
+    a: "turn 是一次连续工作：从领取首条输入开始，到不再欠任何工作结束；一个 turn 可以包含零个或多个 step。step 是一次模型请求，加上这次请求调用工具的过程。"
   - q: "为什么重试不会重复写用户消息？"
     a: "重试发生在仍打开的 step 内。step() 里的 firstAttempt 只在第一次尝试时接纳用户消息；后续重试复用同一份 assembly，不重新跑 agent/pre-step，也不重复写 user/message。"
   - q: "assistant/message 和 assistant/attempt 有什么区别？"
@@ -25,9 +25,9 @@ faq:
     a: "读 session/event 里的持久事件。agent/assistant-stream 是进程本地的实时 chunk，不用于回放；持久结算在 assistant/message 或 assistant/attempt 里。"
 ---
 
-一次模型请求不是从 `fetch` 开始的，而是从一条消息被放进 inbox 开始的。`ReactLoopAgent` 把工作分成轮次和步骤：轮次打开后，循环领取输入、过 pre-step、组装提示词、准备调用、写日志、冻结请求、流式读取、调度工具，最后关闭步骤和轮次。
+一次模型请求不是从 `fetch` 开始的，而是从一条消息被放进 inbox 开始的。`ReactLoopAgent` 把工作分成轮次和步骤：轮次打开之后，循环依次领取输入、跑 `agent/pre-step`、组装提示词、准备调用、把系统消息与用户消息写进 Session 日志、冻结请求、流式读取响应、调度工具，最后关闭步骤和轮次。
 
-这条路径里最容易混淆的，是“持久事实”和“实时控制”混在一起看。下面的图只画一条消息走完一个步骤的主路径；策略分支、工具内部的关卡留给下一篇。
+按调用顺序读下来，最容易混淆的一对概念是“持久事实”和“实时控制”。下面的图只画一条消息经过一个步骤的主流程；策略分支、工具内部的关卡留给下一篇。
 
 <figure class="figure">
   <a href="/diagrams/message-lifecycle.png" target="_blank" rel="noopener" title="点击查看大图"><img src="/diagrams/message-lifecycle.png" alt="dsh 消息生命周期时序图：用户 followup 进入 Inbox，ReactLoopAgent 依次经过 agent/pre-step、system-prompt/assemble、prepareCall、写 system 与 user 消息、冻结请求、流式返回、工具调用，最后写 step 与 turn 的结束事件" width="2150" height="1386" loading="lazy" decoding="async" /></a>
@@ -56,7 +56,7 @@ faq:
 | 持久事实 | 模型见过什么、工具返回了什么 | `session/event` 里的 `user/message`、`assistant/message`、`tool/result` 等 |
 | 实时控制 | 队列、状态、请求拦截、steering | `agent/*` 事件，不用于回放 |
 
-一个 turn 可以有零个 step。比如第一次 `agent/pre-step` 就把领取到的消息全部拒掉，或者改写成空数组，turn 仍然会打开和关闭，但不会发模型请求，也不会写 `step/start`。这一点在 `turn()` 里写得很明确：`phase.step === 0 && decision.messages.length === 0` 时直接以 `completed` 结束。
+一个 turn 可以有零个 step。`agent/pre-step` 如果交出空的 `messages`（把领取到的消息全部去掉，或者改写成空数组），`turn()` 在 `phase.step === 0 && decision.messages.length === 0` 时直接把 turn 以 `completed` 结束，不发起模型请求，也不写 `step/start`。`agent/pre-step` 如果交出 `reject`，turn 以 `blocked` 结束，同样不会有 step。
 
 ## turn() 的主循环
 
@@ -72,7 +72,7 @@ faq:
 8. 如果还有 `nextStep` 输入，继续下一个 step。
 9. 在 `finally` 里追加 `turn/end`，带上 `turnEnds`。
 
-伪代码压成一行是：
+把上面的顺序写成伪代码是：
 
 ```text
 turn/start
@@ -85,9 +85,9 @@ turn/start
   turn/end
 ```
 
-`turn/end` 的 `reason` 由 `turnEnds` 决定：`completed`、`blocked`、`max-tokens`、`aborted`、`error`。`max-tokens` 是粘性的：某一步撞到上限后，后面正常完成的步骤不能把它降级成 `completed`。
+`turn/end` 的 `reason` 由 `turnEnds` 决定：`completed`、`blocked`、`max-tokens`、`aborted`、`error`。`max-tokens` 是粘性的：某一步撞到上限之后，`turnEnds` 就停在 `max-tokens`，后面正常完成的步骤不能把 `reason` 改写成 `completed`。
 
-## inbox：两个队列，不是一个大池子
+## inbox：两个队列，不是一个共用队列
 
 Inbox 里有两个队列：`next-step` 和 `next-turn`。`claim(target, turn)` 的行为是：
 
@@ -95,26 +95,26 @@ Inbox 里有两个队列：`next-step` 和 `next-turn`。`claim(target, turn)` �
 - 如果 `target === 'next-turn'`，再取走一条 `next-turn` 消息；
 - 对取走的每条消息发一个 `agent/inbox/claimed` 实时事件。
 
-`next-step` 的消息会加入当前 turn 的下一个 step；`next-turn` 的消息只在当前 turn 结束后开启新 turn。这个区分解决了一个具体问题：你在模型回答途中补一句话，应该影响下一步，而不是另起一轮；你在它空闲时排一条新任务，才应该新开一轮。
+`next-step` 的消息会加入当前 turn 的下一个 step；`next-turn` 的消息只在当前 turn 结束之后开启新的 turn。区分两个队列解决了一个具体问题：你在模型回答途中补一句话，这句话应该影响下一个 step，而不是另起一轮；agent loop 空闲之后，排进 `next-turn` 的那条新任务才会开启下一个 turn。
 
-Inbox 的变更会以 `agent/inbox/spliced` 写进 Session 日志。恢复 Session 时，pending 输入由这些 splice 事件重新折叠出来，所以“队列里有几条消息”不是只存在内存里的状态。注入的上下文（`agent.inject()`）不会单独唤醒 loop，它等一条唤醒消息一起进入下一次认领。
+Inbox 的变更会以 `agent/inbox/spliced` 事件写进 Session 日志。恢复 Session 时，pending 输入由这些 splice 事件重新折叠出来，所以“队列里有几条消息”不是只存在内存里的状态。注入的上下文（`agent.inject()`）不会单独唤醒 loop；这些注入的上下文要等一条唤醒消息，再和这条唤醒消息一起进入下一次认领。
 
 ## pre-step：准入闸门
 
-`preStep()` 在 `agent.ts:267`，它把领取到的消息连同 `{ turn, step, signal }` 交给 `agent/pre-step` waterfall。监听器可以做两件事：
+`preStep()` 在 `agent.ts:267`，`preStep()` 把领取到的消息连同 `{ turn, step, signal }` 交给 `agent/pre-step` waterfall。`agent/pre-step` 的监听器可以做两件事：
 
 - 返回 `reject`：当前 turn 以 `blocked` 结束，不进入 step。
-- 返回 `enter`：带上最终要接纳的 `messages`，可以改写、增删，也可以设置 `startsRequestSeries`。
+- 返回 `enter`：带上最终要接纳的 `messages`，监听器可以改写或增删 `messages`，也可以设置 `startsRequestSeries`。
 
-`startsRequestSeries` 是一个容易被包装监听器弄丢的字段。它告诉 loop：这次 enter 要开启一个新的请求序列，需要记录新的 `request/header`。如果包装监听器用 `{ ...decision, messages }` 重建决策，要记得把 `startsRequestSeries` 一起带上；否则新序列的标记会被静默丢掉。
+`startsRequestSeries` 是一个容易被包装监听器弄丢的字段。`startsRequestSeries` 传给 loop 的信息是：本次 enter 要开启一个新的请求序列，需要记录新的 `request/header`。如果包装监听器用 `{ ...decision, messages }` 重建决策，重建的结果要包含 `startsRequestSeries`；否则新序列的标记会被静默丢掉。
 
-压缩（compaction）也挂在这个事件上。`dsh-compaction-basic` 在派生请求之前通过 `agent/pre-step` 处理上下文压力；恢复时仍在同一个打开的 step 内，只有剪枝或摘要推进了 surface replacement generation，才会重试。这段行为在[架构总览的轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)里有完整说明。
+压缩（compaction）也挂在 `agent/pre-step` 事件上。`dsh-compaction-basic` 在派生请求之前通过 `agent/pre-step` 处理上下文压力；恢复时仍在同一个打开的 step 内，只有剪枝或摘要推进了 surface replacement generation，压缩才会重试。压缩挂接 `agent/pre-step` 的完整说明在[架构总览的轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)里。
 
 ## 组装提示词：一次，重试复用
 
-进入 step 后，`step()` 先调用 `renderPrompt(assembly)`，把系统提示词、上下文和工具 schema 渲染成文本。`assembly` 来自 pre-step 之前的 `system-prompt/assemble` waterfall；监听器可以修改共享的 assembly，但已注册的完整 section 会在 waterfall 之后被恢复，所以监听器不能替换整个系统提示词。
+进入 step 之后，`step()` 先调用 `renderPrompt(assembly)`，把系统提示词、上下文和工具 schema 渲染成文本。`assembly` 来自 pre-step 之前的 `system-prompt/assemble` waterfall；`system-prompt/assemble` 的监听器可以修改共享的 `assembly`，但已注册的完整 section 会在 waterfall 之后被恢复，所以监听器无法替换整个系统提示词。
 
-这里的关键是“一次，重试复用”：`renderedPrompt` 在 step 开始时算一次，后面的重试循环不会重新组装。重试只重新 `prepareRequest`，然后基于同一份 assembly 和同一份渲染结果重新提交必要的 `system/message`，不会重跑 `agent/pre-step`。
+`step()` 的组装规则是“一次，重试复用”：`renderedPrompt` 在 step 开始时计算一次，后面的重试循环不会重新组装 `assembly`。重试只重新调用 `prepareRequest`，然后基于同一份 `assembly` 和同一份渲染结果重新提交必要的 `system/message`，不会重跑 `agent/pre-step`。
 
 ## prepareCall：先绑定，再提交
 
@@ -123,69 +123,69 @@ Inbox 的变更会以 `agent/inbox/spliced` 写进 Session 日志。恢复 Sessi
 1. 跑 `agent/request` waterfall，得到这次调用的 provider/model 配置。
 2. 调用 `llm.prepareCall(config, signal)`，让适配器提前绑定路由，拿到一个 prepared call。
 
-`prepareCall` 的返回值不只是“能 stream 的函数”。它还带着 `systemPromptUpdate`、`toolUpdate`、`retryPolicy` 和 `context` 等能力声明，后面的提示词提交和重试策略都依赖这些能力。
+`prepareCall` 的返回值（也就是 prepared call）不只是“能 stream 的函数”。prepared call 还带着 `systemPromptUpdate`、`toolUpdate`、`retryPolicy` 和 `context` 等能力声明，后面的提示词提交和重试策略都依赖这些能力声明。
 
-顺序很重要：**先 prepare，再提交系统提示词和用户消息。** 如果 prepare 抛错，或者在 prepare 期间取消，系统提示词和用户消息都不会写进日志。这样就不会出现“日志里有一条用户消息，但模型从没收到请求”的半截状态。这个顺序在 `step()` 和 `prepareRequest()` 的注释里被反复强调。
+顺序很重要：**先 prepare，再提交系统提示词和用户消息。** 如果 `prepareRequest()` 抛错，或者在 `prepareRequest()` 期间取消，系统提示词和用户消息都不会写进 Session 日志。这样就不会出现“日志里有一条用户消息，但模型从没收到请求”的半截状态。先后顺序在 `step()` 的代码里就能看出来：`agent.ts:410` 先拿到 `prepareRequest()` 的结果，`agent.ts:423` 和 `agent.ts:430-439` 才写 `system/message` 与 `user/message`，`agent.ts:442` 最后调用 `buildRequest()`。
 
 ## 写日志：模型可见即已记录
 
-`buildRequest()` 在 `agent.ts:616`，它按需追加这些事件：
+写入分两处。`step()` 提交模型可见的输入：`agent.ts:423` 写 `system/message`（系统提示词的提交，带 surface intent），`agent.ts:430-439` 写 `user/message`（本次接纳的用户消息，`runtime-context` 会延后到第一次需要上下文时再写进日志）。
 
-- `system/message`：系统提示词的提交，带 surface intent；
-- `user/message`：本次接纳的用户消息，`runtime-context` 会延后到第一次上下文需要时再写；
+`buildRequest()` 在 `agent.ts:616`，`buildRequest()` 按需追加请求边界的事件：
+
 - `request/header`：请求信封，`reason` 是 `initial`、`resume`、`change` 或 `series`；
 - `developer/message`：工具增删时写给模型的提示，带 `headerSeq`；
 - `request/context`：provider、model、上下文窗口或提示词更新能力发生变化时写。
 
-然后它调用 `deriveMessages()`，从日志里折叠出模型历史，逐条 `deepFreeze`，再 `Object.freeze` 整个数组和请求对象。冻结之后，请求就是不可变的；任何插件都不能在发送途中改消息。
+追加完这些事件之后，`buildRequest()` 调用 `deriveMessages()`，从 Session 日志里折叠出模型历史，逐条对消息执行 `deepFreeze`，再用 `Object.freeze` 冻结整个数组和请求对象。冻结之后，请求就是不可变的；任何插件都不能在请求发送途中修改消息。
 
-这套顺序实现了“模型可见即已记录”：请求不是从局部变量拼出来的，而是从 Session 日志推导出来的。下一次恢复、fork 或重放，读同一份日志就能得到同一份历史。
+这套顺序实现了“模型可见即已记录”：请求不是从局部变量拼出来的，而是从 Session 日志推导出来的。下一次恢复、fork 或重放读同一份 Session 日志，就能得到同一份历史。
 
-`system/message` 的处理比“追加一条消息”复杂。提示词可能按版本替换、在缓存前缀之后追加更新，或者在不支持更新的路由上归并到首个系统节点。规则在[架构总览的轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)和 `packages/core/agent-loop/README.zh.md` 里；这篇文章只需要记住：提交发生在 buildRequest 之前，日志是唯一来源。
+`system/message` 的处理比单纯追加一条消息更复杂。提示词可能按版本替换、在缓存前缀之后追加更新，或者在不支持更新的路由上归并到首个系统节点。规则在[架构总览的轮次流程](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/architecture.zh.md)和 `packages/core/agent-loop/README.zh.md` 里；用一句话概括：`system/message` 的提交发生在 `buildRequest()` 之前，Session 日志是唯一来源。
 
 ## 流式结算：message 还是 attempt
 
-流式读取由 `AssistantStreamAttempt` 承载。它把 chunk 推给实时事件 `agent/assistant-stream`，同时记录一份紧凑 stream，等结算时写进持久事件。
+流式读取由 `AssistantStreamAttempt` 承载。`AssistantStreamAttempt` 把 chunk 推给实时事件 `agent/assistant-stream`，同时记录一份紧凑 stream，等结算时把这份紧凑 stream 写进持久事件。
 
 结算分几种情况：
 
-- 成功完成：写 `assistant/message`，嵌入紧凑 stream；如果内容为空（比如只返回 usage），派生历史会把它丢掉。
-- 撞到 `max-tokens`：仍然写 `assistant/message`，返回 `max-tokens`，后续步骤不能把 turn 降级成 `completed`。
-- 失败、重试、取消或 stream error，且没有 surface 内容：写 `assistant/attempt`，只留日志，不添加模型历史。
-- 取消时已经收到部分内容：写带 `interrupted: true` 的 `assistant/message`，把已到达的内容留下。
+- 成功完成：写 `assistant/message`，把紧凑 stream 嵌入其中；如果内容为空（比如只返回 usage），派生历史会丢掉这条内容为空的 `assistant/message`。
+- 撞到 `max-tokens`：仍然写 `assistant/message`，返回 `max-tokens`，后续步骤不能把 turn 的结束原因改成 `completed`。
+- 失败、重试、取消或 stream error，且没有 surface 内容：写 `assistant/attempt`，这条记录只留在日志里，不添加模型历史。
+- 取消时已经收到部分内容：写带 `interrupted: true` 的 `assistant/message`，把已到达的内容留在历史里。
 
-失败结算之后，loop 会跑 `agent/request-error` waterfall。监听器可以返回重试动作；`dsh-compaction-basic` 就把它用于规范的上下文溢出。如果没有重试，原始错误继续抛给 turn，最终以 `error` 结束。
+失败结算之后，loop 会跑 `agent/request-error` waterfall。`agent/request-error` 的监听器可以返回重试动作；`dsh-compaction-basic` 遇到规范的上下文溢出时返回重试动作。如果没有重试动作，原始错误会继续抛给 turn，turn 最终以 `error` 结束。
 
-实时 `agent/assistant-stream` 的 chunk 帧是瞬态数据。回放读的是 `assistant/message` 或 `assistant/attempt`；如果进程在结算前硬中断，不会留下持久的 attempt stream。
+实时 `agent/assistant-stream` 的 chunk 帧是瞬态数据。回放时读取的是 `assistant/message` 或 `assistant/attempt`；如果进程在结算完成前被硬中断，Session 日志里不会留下持久的 attempt stream。
 
 ## 工具调用：模型顺序提交
 
-如果 `assistant/message` 里含有 `tool-call` 块，`step()` 会调用 `executeToolCalls()`。它的调度规则是：
+如果 `assistant/message` 里含有 `tool-call` 块，`step()` 会调用 `executeToolCalls()`。`executeToolCalls()` 的调度规则是：
 
 - 独占调用形成屏障：屏障之前的调用必须全部结算，屏障之后的调用才能开始。
 - 可并行的调用使用有界滚动池，并在每次启动前重新分类；注册表在运行中变化时，新的独占调用会形成新的屏障。
-- 每个调用在 prepare/dispatch 之前先写 `tool/call`。
+- 每个工具调用在 prepare/dispatch 之前先把 `tool/call` 写进 Session 日志。
 - 结果按模型发出的顺序提交 `tool/result`，即使实际执行是并发的。
 
-工具返回的 `additionalContexts` 会通过回调 splice 到 `next-step` 队列里，作为活动批次的一部分，排在已记录的工具结果之后。这就是“工具说了一句话，模型下一轮能看到”的路径。
+工具返回的 `additionalContexts` 会通过回调 splice 到 `next-step` 队列里，作为活动批次的一部分，排在已记录的工具结果之后。工具在结果里附加一段文字，模型在下一个 step 看到这段文字；完成这段投递的是上面那条 splice 回调。
 
 工具内部的审批、守卫和失败分层，是下一篇的主题。
 
 ## 日志怎样变成历史
 
-`deriveMessages()` 在 `session/src/index.ts:984`。它不复制日志，而是沿 surface 节点走一遍：
+`deriveMessages()` 在 `session/src/index.ts:984`。`deriveMessages()` 不复制日志，而是沿 surface 节点走一遍：
 
 - 只有 message-producing 事件会进入派生历史：`system/message`、`user/message`、`assistant/message`、`tool/result`，以及插件注册的消息投影。
 - 没有 surface 标记的原始事件（chunk、turn 边界）不会进入历史。
 - 压缩的 `replace` 会删掉被遮蔽的节点，派生历史随之重建。
 - 空内容的 `assistant/message` 派生为 `null`，不进入 transcript。
-- 尾部追加是增量的；只有 replacement 或消息投影变化时才整体重建。
+- 尾部追加是增量的；只有 replacement 或消息投影变化时，`deriveMessages()` 才整体重建派生历史。
 
-返回的数组每次都是新快照，但里面的 `Message` 对象是共享且深冻结的。消费方不能通过返回值改日志。
+`deriveMessages()` 返回的数组每次都是新快照，但数组里的 `Message` 对象是共享且深冻结的。消费方不能通过返回值修改 Session 日志。
 
 ## 自己验证
 
-不需要模型 Key。先确认 agent loop 确实以“空启动列表”挂载：
+下面的检查不需要模型 Key。第一步是确认 agent loop 确实以“空启动列表”挂载：
 
 ```bash
 dsh --profile web --dump-config | grep -A6 "id: agent-loop"
@@ -200,23 +200,23 @@ dsh --profile web --dump-config | grep -A6 "id: agent-loop"
     agents: []
 ```
 
-`agents: []` 表示 base 不在启动时创建 agent；Web 是在客户端请求时创建 Session，再由 Session 驱动 agent loop。这解释了为什么“启动后什么都没发生”是正常的。
+`agents: []` 表示 base 不在启动时创建 agent；Web 是在客户端请求时创建 Session，再由 Session 驱动 agent loop。配置里这份空的 agent 列表，解释了为什么“启动后什么都没发生”是正常现象。
 
-有模型 Key 时，可以进一步看真实日志：
+有模型 Key 时，可以进一步查看真实日志：
 
 1. 启动 `dsh web`，发一条会调用工具的消息。
 2. 找到 `$DSH_HOME/sessions` 下的 Session 文件（可能是 JSONL 或压缩后的 JSONL）。
 3. 在日志里搜索 `turn/start`、`step/start`、`tool/call`、`tool/result`、`turn/end`。
 
-不需要解析每一行；先确认这些事件的出现顺序，再回到 `turn()` 和 `step()` 的源码对照。如果日志是 `.zstd` 压缩的，先解压再读，不要直接编辑原文件。
+这些步骤不要求解析日志的每一行：你要先确认上面列出的事件的出现顺序，再回到 `turn()` 和 `step()` 的源码逐条对照。如果 Session 日志是 `.zstd` 压缩的，先解压再读取，不要直接编辑原文件。
 
 ## 三个常见误解
 
-**“一个 turn 一定有一次模型请求。”** 不一定。首轮 pre-step 拒绝或改写为空时，turn 会打开并关闭，但不进入 step，也不发请求。
+**“一个 turn 一定有一次模型请求。”** 不一定。首轮的 `agent/pre-step` 返回 reject，或者把 `messages` 改写成空数组时，turn 会打开并关闭，但不进入 step，也不会发起模型请求。
 
-**“重试会重新跑 pre-step 和用户消息。”** 不会。重试在仍打开的 step 内，复用 assembly 和渲染结果，只重新 prepare 和提交必要的系统消息；用户消息由 `firstAttempt` 把关，不会重复。
+**“重试会重新跑 pre-step 和用户消息。”** 不会。重试发生在仍打开的 step 内，复用同一份 assembly 和渲染结果，只重新 prepare 并重新提交必要的系统消息；用户消息由 `firstAttempt` 把关，不会重复写入日志。
 
-**“实时 stream 就是历史。”** 不是。实时 chunk 是瞬态事件；历史来自持久结算。SDK 用户要 transcript，应该消费 `session/event`；要队列和状态，才消费 `agent/*`。
+**“实时 stream 就是历史。”** 不是。实时 chunk 是瞬态事件；历史来自持久结算。SDK 用户要 transcript，应该消费 `session/event` 里的持久事件；要队列和状态，才消费 `agent/*` 事件。
 
 ## 官方文档对应位置
 

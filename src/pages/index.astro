@@ -29,7 +29,7 @@ const jsonLd = [
 ---
 <BaseLayout
   title="首页"
-  description="DeepSeek Harness 中文手册：安装、插件配置、版本差异与排错，每页标注核验版本与日期。"
+  description="DeepSeek Harness 中文手册：安装、插件配置、版本差异与排错，每页标注本站核验的 dsh 版本与日期。"
   jsonLd={jsonLd}
 >
   <section class="hero-banner" slot="banner">
@@ -51,13 +51,13 @@ const jsonLd = [
     <section class="hero">
       <p class="hero__eyebrow">dsh · 中文上手手册</p>
       <h1>DeepSeek Harness 中文手册</h1>
-      <p class="hero__lead">dsh（DeepSeek Harness）是 DeepSeek 开源的 AI Agent 运行框架：把模型、工具、插件和本地工作区接在一起。这本手册面向第一次上手的人——先帮你装好，再解释插件与版本，最后才带你读源码。</p>
-      <p class="hero__meta">核验于 {versions.checkedAt.slice(0, 10)} · dsh {versions.npm.latest} · <a href="/versions/">版本差异</a></p>
+      <p class="hero__lead">dsh（DeepSeek Harness）是把 AI 模型、工具、插件和本机的工作目录接在一起运行的程序，由 DeepSeek 开源。这本手册先讲怎么把 dsh 安装好、运行起来，再解释插件与版本，读源码的部分放在最后。</p>
+      <p class="hero__meta">本站核验于 {versions.checkedAt.slice(0, 10)} · dsh {versions.npm.latest} · <a href="/versions/">版本差异</a></p>
       <div class="hero__actions">
-        <a class="button button--primary" href="/install/desktop/">第一次用：装桌面版</a>
+        <a class="button button--primary" href="/install/desktop/">第一次用：安装桌面版</a>
         <a class="button" href="/install/">三种安装方式怎么选</a>
       </div>
-      <p class="hero__reassure">不需要先懂命令行，也不需要读源码。源码系列是选修，等你能跑起来再看。</p>
+      <p class="hero__reassure">不需要先懂命令行，也不需要先读源码。源码那几篇是选修内容，等 dsh 能在本机跑起来之后再看更省力。</p>
     </section>
 
     <section class="section">
@@ -65,27 +65,27 @@ const jsonLd = [
       <div class="paths">
         <a class="path" href="/install/">
           <span class="path__kicker">第一次用</span>
-          <span class="path__title">先把它装起来</span>
-          <span class="path__desc">桌面版、npx、源码三种方式，每一步都有失败处理。</span>
+          <span class="path__title">先把 dsh 装起来</span>
+          <span class="path__desc">桌面版、npx（在命令行里启动，适合临时试一次）、源码三种方式，每种都写了准备条件和常见失败的处理。</span>
         </a>
         <a class="path" href="/plugins/install/">
           <span class="path__kicker">卡住了</span>
           <span class="path__title">插件装不上</span>
-          <span class="path__desc">三种安装入口，一张报错对照表，先定位再动手。</span>
+          <span class="path__desc">Web UI 的插件页、命令行、本地路径三种安装入口，一张报错对照表，先按现象找到原因，再决定怎么处理。</span>
         </a>
         <a class="path" href="/plugins/first-plugin/">
           <span class="path__kicker">想深入</span>
           <span class="path__title">写第一个插件</span>
-          <span class="path__desc">从最小工具开始，跑通加载，再谈发布。</span>
+          <span class="path__desc">先写一个最小插件，确认启动日志里有加载记录，再学注册工具和发布到 npm 与 GitHub。</span>
         </a>
       </div>
     </section>
 
     <details class="quickstart-panel">
-      <summary>已经装好 Node？展开看命令行启动</summary>
+      <summary>展开命令行启动步骤（需要 Node）</summary>
       <div class="quickstart">
         <pre><code>npx @deepseek-ai/dsh@latest web</code></pre>
-        <p class="quickstart__note">默认打开 <code>http://127.0.0.1:3080</code>，需要 Node 与 API Key。看到 401 不是失败：要用启动日志里带 token 的地址。</p>
+        <p class="quickstart__note">运行这条命令之前，本机要有 Node，还要有 DeepSeek API Key。dsh 启动后默认在本机的 <code>http://127.0.0.1:3080</code> 上等待访问，浏览器会自动打开带 token（启动时生成的访问串）的地址。打开不带 token 的地址会显示 401（服务端拒绝没带 token 的请求），这不等于安装失败：改用启动日志里带 token 的地址即可。</p>
         <a href="/install/npx/">完整的 npx 步骤 →</a>
       </div>
     </details>
@@ -93,9 +93,9 @@ const jsonLd = [
     <section class="section">
       <h2>装完先做这三件事</h2>
       <ol class="steps">
-        <li><strong>填 API Key。</strong>设置 → 模型，保存后下一次请求生效。见 <a href="/models/">模型配置</a>。</li>
-        <li><strong>选工作区。</strong>没选工作区时，对话框不可用。</li>
-        <li><strong>装一个插件并确认它出现。</strong>装完不显示，多半是 profile 不对，见 <a href="/plugins/install/">插件安装</a>。</li>
+        <li><strong>填 API Key。</strong>API Key 是一串用来调用 DeepSeek 模型的访问口令。打开设置 → 模型，在 DeepSeek 卡片里填入 API Key 并保存；保存后的下一次请求就会用到刚保存的 Key，不需要重启服务。见 <a href="/models/">模型配置</a>。</li>
+        <li><strong>选工作区。</strong>dsh 把工作区当作默认的读写位置，第一次启动后要在界面里选一次。没有选工作区时，界面上的输入框不可用。</li>
+        <li><strong>装一个插件，确认插件装上了。</strong>profile 是 dsh 的一个配置目录，一个 profile 装一套插件，Web UI 只显示当前 profile 里已装的插件。装完不显示，多半是插件装进了另一个 profile：先确认插件装进了哪个 profile，再确认 Web UI 用的是同一个。见 <a href="/plugins/install/">插件安装</a>。</li>
       </ol>
     </section>
 
@@ -104,18 +104,18 @@ const jsonLd = [
       <div class="paths">
         <a class="path" href="/source/plugin-tree/">
           <span class="path__kicker">源码 01</span>
-          <span class="path__title">插件树怎么长出来</span>
-          <span class="path__desc">profile、bundle、patch 与 composeEntries()，96 行 base 配置的去向。</span>
+          <span class="path__title">插件树的组装过程</span>
+          <span class="path__desc">profile（列出要用哪些组合包的一个目录）、bundle（一组配置改动的分发单位）、patch（按 id 替换整段配置的片段）逐层合成运行中的服务；base 组合包是共享的第一层，里面有 96 行配置。</span>
         </a>
         <a class="path" href="/source/message-lifecycle/">
           <span class="path__kicker">源码 02</span>
-          <span class="path__title">一条消息怎么走完</span>
-          <span class="path__desc">inbox、pre-step、prompt 组装、请求冻结与流式结算。</span>
+          <span class="path__title">一条消息怎样变成一个步骤</span>
+          <span class="path__desc">一条消息从被领取、组装提示词、冻结请求，到流式返回和写入日志，中间会留下哪些记录。</span>
         </a>
         <a class="path" href="/source/tool-pipeline/">
           <span class="path__kicker">源码 03</span>
-          <span class="path__title">工具调用怎么过关</span>
-          <span class="path__desc">审批、守卫、环绕分发、后置策略与最终冻结。</span>
+          <span class="path__title">一次工具调用要过哪些关卡</span>
+          <span class="path__desc">模型要用工具时，一次调用要按顺序经过审批、各项守卫、执行和后置处理，最后冻结成一条结果；调用被拒绝也算一种结果。</span>
         </a>
       </div>
     </section>
@@ -134,12 +134,12 @@ const jsonLd = [
       </section>
 
       <section class="section">
-        <h2>怎么核验</h2>
-        <p>每条命令在 Windows 11 + Node 24 上实跑一次。每页头部写核验版本与日期；超过 30 天会显示提示条。源码文章固定到 <code>dsh-v0.2.1-rc.3</code> 的 commit，行号只对那份源码有效。</p>
+        <h2>核验方法</h2>
+        <p>“核验”分两种情况：能在本机运行的命令，都在 Windows 11 + Node 24 的环境下执行过一次，本站把这种情况标为“实测”；本机跑不了的步骤按官方文档核对，并在页面上写明。每页头部标注核验到的 dsh 版本与核验日期，超过 30 天会显示提示条。源码文章固定到 <code>dsh-v0.2.1-rc.3</code> 的 commit，行号只对那份源码有效。</p>
         <h2>权威来源</h2>
         <ul class="links">
-          <li><a href={OFFICIAL_DOCS} rel="noopener">官方文档</a>：术语与接口以这里为准。</li>
-          <li><a href={OFFICIAL_REPO} rel="noopener">官方仓库</a>：源码与 release。</li>
+          <li><a href={OFFICIAL_DOCS} rel="noopener">官方文档</a>：dsh 的术语和接口定义以官方文档为准。</li>
+          <li><a href={OFFICIAL_REPO} rel="noopener">官方仓库</a>：dsh 的源码和版本发布记录都在官方仓库。</li>
         </ul>
       </section>
     </div>

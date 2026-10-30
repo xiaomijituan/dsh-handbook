@@ -23,9 +23,9 @@ node -v
 npm -v
 ```
 
-本页的实测环境是 Windows 11 + Node 24.18.0 + npm 11.16.0。dsh 对 Node 的最低要求以官方 README 为准，不要只照抄本页版本号。
+本页的实测环境是 Windows 11 + Node 24.18.0 + npm 11.16.0。dsh 对 Node 的最低要求以官方 README 为准，不要只照抄上面这组版本号。
 
-npx 需要访问 npm registry。公司网络或代理环境下，先确认 registry 可达。
+npx 需要联网访问 npm registry（npm 的官方包仓库，命令从那里下载安装包）。在公司网络或代理环境下，你先确认能访问 registry，再运行命令。
 
 ## 一行命令启动
 
@@ -33,7 +33,7 @@ npx 需要访问 npm registry。公司网络或代理环境下，先确认 regis
 npx @deepseek-ai/dsh@latest web
 ```
 
-第一次运行会下载依赖，可能花几分钟；缓存之后启动会快很多。2026-10-27 的实测里，缓存命中后 9–14 秒就打印出了访问地址。
+第一次运行时，npx 要先把依赖下载到本机，可能花几分钟；依赖有了缓存，之后的启动就快很多。2026-10-27 的实测里，缓存命中后 9–14 秒就打印出了访问地址。
 
 启动日志里会出现类似这一行：
 
@@ -41,7 +41,7 @@ npx @deepseek-ai/dsh@latest web
 dsh web: http://127.0.0.1:3080/?token=<redacted>
 ```
 
-浏览器会自动打开这个地址。加 `--no-open` 可以不自动打开：
+运行命令后，浏览器会自动打开带 token 的地址。不想让浏览器自动打开，就在命令后面加 `--no-open`：
 
 ```bash
 npx @deepseek-ai/dsh@latest web --no-open
@@ -49,33 +49,33 @@ npx @deepseek-ai/dsh@latest web --no-open
 
 ## latest 与 next 的区别
 
-npm 上同时存在多个发布通道。2026-10-27 核验到的值是：
+npm 给同一个包准备了好几个发布通道——latest、next、alpha 这类标签，每个标签指向一个具体版本。2026-10-27 核验到的值是：
 
-| 通道 | 版本 |
+| 发布通道标签 | 标签指向的版本 |
 |---|---|
 | latest | 0.2.1-rc.2 |
 | next | 0.2.1-rc.4 |
 | alpha | 0.2.1-alpha.5 |
 
-`npx @deepseek-ai/dsh@latest web` 拿的是 latest，不是 next。想试最新的预发布版本，显式指定 `@next`：
+`npx @deepseek-ai/dsh@latest web` 装到的是 latest 指向的版本，不是 next 指向的版本。想试最新的预发布版本，就在命令里显式写上 `@next`：
 
 ```bash
 npx @deepseek-ai/dsh@next web
 ```
 
-三个通道不会自动同步，GitHub 上的最新 tag 也可能与 npm 不同。版本关系见 [版本对照](../versions.mdx)。
+latest、next、alpha 三个标签指向的版本不会自动同步，GitHub 上的最新 tag 也可能与 npm 上的版本不同。两边的对应关系见 [版本对照](../versions.mdx)。
 
 ## 确认服务起来了
 
-服务默认监听 `127.0.0.1:3080`。这里有一个容易误判的点：
+dsh 服务默认监听 `127.0.0.1:3080`。下面这条检查命令的输出容易让人误判：
 
 ```bash
 curl -I http://127.0.0.1:3080/
 ```
 
-返回 **401 Unauthorized 是正常的**。裸地址没有带上启动时生成的 token，服务会拒绝。
+返回 **401 Unauthorized 是正常的**：请求的地址里没有启动时生成的 token，服务就会拒绝这次请求。
 
-带 token 的地址会返回 303，并下发一个 `dsh-auth-*` cookie，然后跳回 `/`；浏览器带着这个 cookie 再请求，才拿到 200。实测结果：
+带 token 的地址会返回 303，服务端随后下发一个 `dsh-auth-*` cookie，并把请求跳转回 `/`；浏览器带着 `dsh-auth-*` cookie 再次请求，才拿到 200。实测结果：
 
 | 请求 | 结果 |
 |---|---|
@@ -84,7 +84,7 @@ curl -I http://127.0.0.1:3080/
 | 跟随跳转并携带 cookie | 200 |
 | 已有 cookie 再访问 `/` | 200 |
 
-用 curl 验证时要带 cookie jar，否则会一直看到 401：
+用 curl 重复上面这套请求时要带上 cookie 文件（`-c` 负责写入、`-b` 负责读出），否则每一次请求都不带 cookie，会一直看到 401：
 
 ```bash
 curl -L -c cookies.txt -b cookies.txt "http://127.0.0.1:3080/?token=..."
@@ -92,15 +92,15 @@ curl -L -c cookies.txt -b cookies.txt "http://127.0.0.1:3080/?token=..."
 
 ## 停止与升级
 
-- 前台运行时按 `Ctrl+C`。
-- 如果进程已经脱离终端，先找监听者，再按 PID 结束：
+- dsh 在终端前台运行时，按 `Ctrl+C` 结束进程。
+- 如果 dsh 进程已经脱离终端（关掉终端窗口之后仍在运行），先用 `netstat` 找到监听 3080 端口的进程号，再用 `taskkill` 按进程号结束：
 
 ```bash
 netstat -ano | grep 3080
 taskkill /PID <pid> /F
 ```
 
-- 升级就是重新运行 `npx @deepseek-ai/dsh@latest web`。npx 可能使用缓存，想强制拉新版本可以在命令里写明确版本号。
+- 升级就是重新运行一次 `npx @deepseek-ai/dsh@latest web`。npx 可能使用本机缓存里的旧版本，想强制用上指定版本，就在命令里写明确版本号。
 
 ## 常见失败
 
@@ -112,4 +112,4 @@ taskkill /PID <pid> /F
 | `command not found: node` | Node 未安装或不在 PATH | 先装 Node，再重开终端 |
 | 启动很慢 | 第一次下载依赖 | 等待完成；后续走缓存 |
 
-端口占用这一条是实测中真实遇到的：上一次启动的 child 进程没有随终端退出，第二次启动直接报 `EADDRINUSE`。先清端口，再重试。
+端口占用这一条是实测中真实遇到的：上一次启动留下的子进程没有随终端一起退出，3080 端口仍被占着，第二次启动直接报 `EADDRINUSE`。先结束占用 3080 端口的进程，再重新运行命令。

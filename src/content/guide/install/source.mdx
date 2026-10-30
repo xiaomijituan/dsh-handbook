@@ -16,30 +16,30 @@ keywords: ["deepseek harness 源码安装", "dsh pnpm", "deepseek harness 开发
 related: ["plugins/first-plugin", "install/npx"]
 ---
 
-## 什么时候需要源码
+## 需要源码安装的三种情况
 
-只有三种情况值得走源码：
+只有三种情况值得用源码安装：
 
 1. 要改 dsh 本身的代码
-2. 要开发插件，需要本地联调
-3. 要跟着某个提交或分支验证问题
+2. 要开发插件，插件得和在自己机器上跑起来的 dsh 一起调试
+3. 要针对某个提交（commit）或分支复现问题、验证结论
 
-只是想用，用 [桌面版](./desktop.mdx) 或 [npx](./npx.mdx) 更快。
+如果你只是想用 dsh，用 [桌面版](./desktop.mdx) 或 [npx](./npx.mdx) 更快。
 
 ## 前置
 
 - Node 与 npm
-- **pnpm**：仓库使用 pnpm workspace
+- **pnpm**：仓库按 pnpm workspace 组织（pnpm 的多包管理机制），依赖要用 pnpm 安装
 - Git
-- Windows 上可能还需要 C++ 构建工具（部分原生依赖）
+- Windows 上可能还需要 C++ 构建工具，用来编译部分原生依赖
 
-pnpm 不是可选项。实测中，`dsh plugin` 这类命令内部也会转发给 pnpm；本机没有 pnpm 时，命令直接报“不是内部或外部命令”。先确认：
+pnpm 不是可选工具。实测中，`dsh plugin` 这类命令会把操作转交给 pnpm 执行；本机没有 pnpm 时，命令直接报“不是内部或外部命令”。先确认本机装有 pnpm：
 
 ```bash
 pnpm -v
 ```
 
-pnpm 的安装方式与版本要求以官方 README 为准。不要在教程里写死一个版本号，尤其在 Node 版本变化之后。
+pnpm 的安装方式和版本要求以官方 README 为准，本站不写死具体版本号；Node 版本变化之后，要回到 README 重新核对。
 
 ## 克隆与安装
 
@@ -49,7 +49,7 @@ cd deepseek-harness
 pnpm install
 ```
 
-仓库较大，第一次安装依赖会比较久。网络不稳时先配置好 registry 或代理，避免中途失败留下半套依赖。
+仓库较大，第一次安装依赖会比较久。网络不稳时，先把 registry 或代理配置好，避免下载到一半失败、本机留下装不全的依赖。
 
 ## 构建与启动
 
@@ -60,7 +60,7 @@ pnpm dsh web
 
 官方 README 里还提供了 `pnpm run dev:web`，用于开发时监听源码改动并重建客户端。日常运行用构建后的产物即可。
 
-启动后同样会打印带 token 的本地地址。裸访问 3080 返回 401 属于正常鉴权行为，见 [npx 安装](./npx.mdx#确认服务起来了)。
+启动后同样会打印带 token 的本地地址。直接用不带 token 的地址访问 3080 端口会返回 401，属于正常的鉴权行为，见 [npx 安装](./npx.mdx#确认服务起来了)。
 
 ## 更新
 
@@ -70,7 +70,7 @@ pnpm install
 pnpm run build
 ```
 
-官方处于 developer preview，破坏性变更频繁。更新前先看 release 说明，不要把生产环境的 profile 直接跟着 main 走。
+官方还处于 developer preview（正式发布之前的预览阶段），破坏性变更（让你已有的配置或代码失效的改动）很频繁。更新之前先看 release 说明；生产环境用的 profile 不要直接指向 main 分支。
 
 ## 常见失败
 
@@ -84,4 +84,4 @@ pnpm run build
 
 ## 本站核验说明
 
-本页的仓库命令按官方 README 与 2026-10-27 的仓库状态核对。**本机没有完成 `pnpm install` 与构建，源码安装未实测。** 遇到与本文不一致的输出，以官方仓库当前说明为准，并欢迎提 issue 纠错。
+本页列出的仓库命令按官方 README 与 2026-10-27 的仓库状态核对。**本机没有完成 `pnpm install` 与构建，源码安装未实测。** 遇到与本文不一致的输出，以官方仓库当前说明为准，也欢迎提 issue 纠错。

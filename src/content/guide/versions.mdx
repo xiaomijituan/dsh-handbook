@@ -16,18 +16,18 @@ keywords: ["deepseek harness 版本", "dsh 版本", "npm dist-tags"]
 related: ["install/npx", "troubleshooting"]
 ---
 
-## 现在有哪些版本
+## 当前版本号
 
 2026-10-27 核验到的状态：
 
-- **npm latest**：`0.2.1-rc.2` —— `npx` 默认装这个
-- **npm next**：`0.2.1-rc.4` —— 更新的预发布版本
+- **npm latest**：`0.2.1-rc.2` —— 用 `npx` 安装时默认拿到的版本
+- **npm next**：`0.2.1-rc.4` —— 比 latest 更新的预发布版本
 - **npm alpha**：`0.2.1-alpha.5` —— 更早的 alpha
 - **GitHub tag**：`dsh-v0.2.1-rc.3` —— 仓库 release 的最新 tag
 
-这几个数字不是一条线上的相邻版本，也不是自动同步的。`latest`、`next`、`alpha` 是 npm 的发布标签；GitHub tag 是另一套发布动作，时间与内容都可能不同。
+上面四个版本号不在同一条发布线上，也不会自动同步。`latest`、`next`、`alpha` 是 npm 的发布标签；GitHub tag 由另一套发布动作产生，发布时间和内容都可能与 npm 不同。
 
-## 为什么 npx 装的不是最新
+## npx 默认安装 latest 的原因
 
 npm 的默认标签是 `latest`。下面两条命令等价：
 
@@ -36,58 +36,58 @@ npx @deepseek-ai/dsh web
 npx @deepseek-ai/dsh@latest web
 ```
 
-它们拿到的都是 `0.2.1-rc.2`，不是 `next` 上的 `0.2.1-rc.4`。想试下一版，必须显式写：
+这两条命令拿到的都是 `0.2.1-rc.2`，不是 `next` 上的 `0.2.1-rc.4`。想装 next 上的版本，命令里必须显式写出 `@next`：
 
 ```bash
 npx @deepseek-ai/dsh@next web
 ```
 
-要确认当前各通道的值，直接问 npm：
+要确认各通道当前的版本号，用下面这条命令向 npm 查询：
 
 ```bash
 npm view @deepseek-ai/dsh dist-tags
 ```
 
-## 版本号怎么读
+## 版本号的各段含义
 
-`0.2.1-rc.2` 拆开看：
+`0.2.1-rc.2` 分成四段，每段的含义：
 
-- `0`：主版本。官方还在 developer preview，主版本为 0，意味着随时可能有破坏性变更。
+- `0`：主版本。官方仍处于 developer preview，主版本停在 0，破坏性变更随时可能出现。
 - `2`：次版本。次版本变化通常包含功能调整。
 - `1`：补丁版本。
 - `rc.2`：预发布标记。`alpha` 更早，`rc` 更接近稳定。
 
-同一个次版本内，预发布序号越大越新；跨次版本时不要只比较数字大小，先看 release 说明。
+同一个次版本内，预发布序号越大代表版本越新；跨次版本时不要只比较数字大小，要先看 release 说明。
 
 ## 升级
 
-写死版本号最可控：
+最可控的做法是把版本号直接写进命令：
 
 ```bash
 npx @deepseek-ai/dsh@0.2.1-rc.4 web --no-open
 ```
 
-长期使用建议：
+长期使用建议下面三条：
 
-1. 在脚本里固定版本，不用 `@latest` 漂移。
-2. 升级前用单独的 `DSH_HOME` 试跑，避免污染日常 profile。
-3. 升级后重新跑一次插件加载检查：`dsh --profile web --dump-config`。
+1. 在脚本里固定版本号，不用 `@latest`，避免不同时间装到不同的版本。
+2. 升级前用单独的 `DSH_HOME` 试运行，避免改动日常使用的 profile。
+3. 升级后重新执行一次插件加载检查：`dsh --profile web --dump-config`。
 
-## 破坏性变更怎么跟
+## 破坏性变更的跟进方法
 
-官方在 README 里明确标注 developer preview，会有兼容性破坏。跟进时看三处：
+官方在 README 里明确标注 developer preview，意味着会有兼容性破坏。跟进破坏性变更时看下面三处：
 
 - GitHub Releases 的说明
 - `engines.dsh`：插件声明的兼容范围
 - 官方 `upgrade-guide` 文档
 
-插件作者尤其要注意：`engines.dsh` 不匹配时，安装或启动会被拒绝。这比运行时才报错更早暴露问题。
+插件作者尤其要注意：`engines.dsh` 与当前 dsh 版本不匹配时，安装或启动阶段就会被拒绝，问题比运行时才报错暴露得更早。
 
 ## 本站的核验规则
 
-- 每页头部写核验的 dsh 版本与日期
-- 每周脚本比对 npm dist-tags 与 GitHub 最新 tag
+- 每页头部写明核验时的 dsh 版本与日期
+- 每周由脚本比对 npm dist-tags 与 GitHub 最新 tag
 - 页面核验超过 30 天会显示提示条
 - 版本对照表以 `src/data/versions.json` 为准，该文件由脚本生成
 
-如果你看到页面版本与当前 npm 不一致，以官方 release 与本页日期较新的信息为准，并欢迎提 issue。
+如果页面写的版本与当前 npm 不一致，请比较官方 release 与本页的核验日期，以更新的那一条为准，也欢迎提 issue。

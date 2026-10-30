@@ -18,7 +18,7 @@ related: ["plugins/install", "install/source"]
 
 ## 插件最小结构
 
-一个 dsh 插件就是一个导出 `apply` 函数的模块。框架加载时调用 `apply`，把 `ctx` 传进来；你通过 `ctx` 注册工具、事件或其他能力。
+一个 dsh 插件就是一个导出 `apply` 函数的模块。dsh 加载插件时调用 `apply`，并把 `ctx` 作为参数传进来；你在 `ctx` 上注册工具、事件或其他能力。
 
 ```js
 export const name = 'hello-plugin';
@@ -28,11 +28,11 @@ export function apply() {
 }
 ```
 
-就这么多。没有构建步骤，没有必须继承的类，也不需要先注册什么清单。仓库里的可运行版本在 `examples/01-hello-plugin/index.js`。
+上面这段代码就是插件的全部结构：不需要构建步骤，没有必须继承的类，也不需要事先登记插件清单。仓库里可运行的版本在 `examples/01-hello-plugin/index.js`。
 
 ## 用 patch 加载（实测）
 
-开发阶段用 `--patch` 覆盖层加载最省事。建一个 `hello.patch.yml`，`name` 必须写绝对路径：
+开发阶段用 `--patch` 覆盖层加载最方便。新建一个 `hello.patch.yml`，其中 `name` 必须写成绝对路径：
 
 ```yaml
 - insert:
@@ -40,25 +40,25 @@ export function apply() {
       name: '/absolute/path/to/dsh-handbook/examples/01-hello-plugin/index.js'
 ```
 
-启动：
+在存放 `hello.patch.yml` 的目录里启动：
 
 ```bash
 dsh web --patch ./hello.patch.yml
 ```
 
-启动日志里出现下面这行，就说明插件被加载了：
+启动日志里出现下面这一行，就说明插件已经被加载：
 
 ```text
 [hello-plugin] plugin loaded!
 ```
 
-2026-10-27 在 Windows 上实测：使用 `npx @deepseek-ai/dsh@0.2.1-rc.2 web --patch ... --no-open`，7 秒后打印加载日志。
+2026-10-27 在 Windows 上实测：执行 `npx @deepseek-ai/dsh@0.2.1-rc.2 web --patch ... --no-open`，7 秒后打印加载日志。
 
-> patch 里的路径不会被解析成相对于 patch 文件；写成相对路径会找不到模块。用 `pwd` 打印当前目录，再拼绝对路径。
+> patch 文件里的 `name` 不会按“相对于 patch 文件所在目录”来解析；写成相对路径会找不到模块。先执行 `pwd` 打印当前目录，再拼出绝对路径。
 
 ## 打包成 bundle 并安装（实测）
 
-要让别人也能安装，把它做成组合包。目录结构：
+要让别人也能安装，就要把插件目录打包成组合包。组合包的目录结构：
 
 ```text
 01-hello-plugin/
@@ -67,7 +67,7 @@ dsh web --patch ./hello.patch.yml
 └─ index.js
 ```
 
-`package.json` 的关键是 `dsh.bundle` 与 `engines.dsh`：
+组合包的 `package.json` 里起作用的两个字段是 `dsh.bundle` 与 `engines.dsh`：
 
 ```json
 {
@@ -82,7 +82,7 @@ dsh web --patch ./hello.patch.yml
 }
 ```
 
-`cordis.patch.yml` 按包名引用自己，而不是源码路径：
+组合包里的 `cordis.patch.yml` 用包名 `dsh-plugin-hello` 引用插件，不再写源码路径：
 
 ```yaml
 - insert:
@@ -90,20 +90,20 @@ dsh web --patch ./hello.patch.yml
       name: dsh-plugin-hello
 ```
 
-安装到一个测试 profile：
+把插件装进一个测试 profile。命令里的 `./examples/01-hello-plugin` 是相对路径，要在本手册仓库 dsh-handbook 的根目录执行：
 
 ```bash
 dsh plugin --profile hello add ./examples/01-hello-plugin
 dsh --profile hello --dump-config
 ```
 
-实测输出：profile 初始化成功，`dsh-plugin-hello` 以链接方式加入，`--dump-config` 里能看到这个 bundle；用 `dsh --profile hello web --no-open` 启动，6 秒后打印加载日志。
+实测输出：profile 初始化成功，`dsh-plugin-hello` 以链接方式加入，`--dump-config` 里能看到 `dsh-plugin-hello` 这条 bundle 记录；再用 `dsh --profile hello web --no-open` 启动，6 秒后打印加载日志。
 
-注意：`dsh plugin` 依赖 pnpm。本机没有 pnpm 时会直接报“不是内部或外部命令”，见 [插件安装与排错](./install.mdx#命令行dsh-plugin-add)。
+注意：`dsh plugin` 依赖 pnpm。本机没有 pnpm 时，这条命令会直接报“不是内部或外部命令”，具体处置见 [插件安装与排错](./install.mdx#命令行dsh-plugin-add)。
 
 ## 注册一个工具
 
-工具插件在 `apply` 里调用 `ctx.tools.register`，并用 `defineTool` 描述参数与输出。下面这段来自官方 `adding-a-tool` 文档：
+工具插件在 `apply` 里调用 `ctx.tools.register` 登记工具，并用 `defineTool` 描述参数的结构与输出的格式。下面这段代码取自官方文档《开发一个工具》（`docs/user/develop/basic/tool.zh.md`）：
 
 ```ts
 import type { Context } from '@deepseek-ai/cordis';
@@ -132,21 +132,21 @@ export function apply(ctx: Context) {
 
 三个要点：
 
-- `inject = ['tools']`：等工具注册表就绪后再加载插件。
-- `parameters` 会被用来校验模型生成的参数，`execute` 里拿到的 `args` 是类型化的。
-- `output.render` 决定工具结果怎么呈现给模型；返回值必须是 `output.schema` 声明的规范值。
+- `inject = ['tools']`：声明插件依赖工具注册表，Cordis 要等工具注册表就绪之后再挂载该插件。
+- `parameters` 用来校验模型生成的参数；`execute` 里拿到的 `args` 已按 `parameters` 声明的类型校验过。
+- `output.render` 决定工具结果以什么形式呈现给模型；`execute` 的返回值必须符合 `output.schema` 声明的规范。
 
-**核验状态：** 最小加载与 bundle 安装已实测；工具注册代码按官方 cookbook 编写，本页没有完成“带模型 Key 调用 greet 工具”的端到端验证。工具版还需要让包依赖 `@deepseek-ai/dsh-tools`，具体包结构以官方文档为准。
+**核验状态：** 最小加载与 bundle 安装已实测；工具注册代码按官方《开发一个工具》教程编写，本页没有完成“带模型 Key 调用 greet 工具”的端到端验证。工具版插件还需要把 `@deepseek-ai/dsh-tools` 写进包依赖，具体包结构以官方文档为准。
 
 ## 发布到 npm 与 GitHub
 
-1. 包名用 `dsh-plugin-` 前缀或带作用域，`package.json` 保留 `dsh.bundle` 与 `engines.dsh`。
+1. 包名要用 `dsh-plugin-` 前缀或带作用域，`package.json` 保留 `dsh.bundle` 与 `engines.dsh` 两个字段。
 2. `files` 只放运行需要的文件，不要把测试和本地配置发上去。
-3. 发布前在干净的 profile 里装一遍验证。
-4. GitHub 仓库加 `dsh-plugin` topic，方便别人发现。
+3. 发布前在一个干净的 profile 里重新安装一次，确认插件能被加载。
+4. 在 GitHub 仓库加上 `dsh-plugin` topic，方便别人搜索到插件。
 5. 不把 API Key、cookie、个人路径写进仓库。
 
-## 下一步读什么
+## 延伸阅读
 
 - 官方开发教程：[第一个插件](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/index.zh.md)
 - 工具编写参考：[adding-a-tool](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/cookbook/adding-a-tool.zh.md)

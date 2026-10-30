@@ -18,39 +18,39 @@ related: ["install/npx", "models"]
 
 ## 下载地址
 
-官方下载页是 [deepseek.com/harness](https://www.deepseek.com/harness/)。页面上的直链文件名带 `latest`，会随官方更新指向新版本，不是固定版本的归档链接。
+官方下载页是 [deepseek.com/harness](https://www.deepseek.com/harness/)。下载页上的链接直接指向文件本身（这类链接叫直链），文件名带 `latest`：官方发布新版本后，同一地址指向的就是新文件，因此直链不是固定版本的归档链接。
 
 2026-10-27 核验到的直链与文件信息：
 
 - **Windows x64**：[dsh-latest-windows-x64.exe](https://download.deepseek.com/desktop/dsh-latest-windows-x64.exe) —— 289,415,960 字节（约 276 MB），更新于 2026-10-24
 - **macOS arm64**：[dsh-latest-macos-arm64.dmg](https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg) —— 264,791,658 字节（约 252 MB），更新于 2026-10-24
 
-两个地址当时都返回 HTTP 200，`content-type` 分别是 Windows 可执行文件与 macOS 磁盘映像。文件较大，网络不稳时建议用下载工具续传。
+2026-10-27 核验时，两个地址都返回 HTTP 200，响应头 `content-type` 分别是 Windows 可执行文件与 macOS 磁盘映像。安装包较大，网络不稳时你可以用支持断点续传的下载工具重新下载。
 
 ## Windows 安装
 
-1. 运行下载的 `dsh-latest-windows-x64.exe`。
-2. 如果出现 SmartScreen 蓝色提示，点“更多信息”，再点“仍要运行”。不要为了安装关闭杀毒软件。
+1. 运行下载得到的 `dsh-latest-windows-x64.exe`。
+2. 如果弹出 SmartScreen 蓝色提示（Windows 对不熟悉的可执行文件的拦截页），点“更多信息”，再点“仍要运行”。不要为了安装关闭杀毒软件。
 3. 按安装器提示完成安装，启动 dsh。
-4. 第一次启动会自动打开发布在本机的 Web UI。
+4. 第一次启动时，dsh 会自动打开浏览器里的 Web UI：界面由本机运行的 dsh 提供，浏览器只打开本机地址。
 
-如果安装被公司设备策略拦截，联系 IT；这类拦截通常不是安装包损坏。
+如果安装被公司的设备管理策略拦住，联系公司的 IT 支持（帮你处理办公软件和权限的部门）；这类拦截通常不是安装包损坏。
 
 ## macOS 安装
 
-1. 打开 `dsh-latest-macos-arm64.dmg`，把应用拖进“应用程序”。
-2. 第一次打开如果提示“无法验证开发者”，去“系统设置 → 隐私与安全性”，在页面下方点“仍要打开”。
+1. 打开 `dsh-latest-macos-arm64.dmg`，把 dsh 应用图标拖进“应用程序”文件夹。
+2. 第一次打开时如果提示“无法验证开发者”，打开“系统设置 → 隐私与安全性”，在页面下方点“仍要打开”。
 3. 再启动一次应用。
 
-最低系统版本以官方下载页说明为准。本页没有在本机实测 macOS 安装流程。
+最低系统版本以官方下载页的说明为准。macOS 的安装流程没有在本机实测。
 
 ## 首次启动：填 API Key
 
 1. 打开“设置 → 模型”。
 2. 在 DeepSeek 卡片里填入 API Key，保存。
-3. 保存后下一次请求生效，不需要重启。
+3. 保存之后，新 Key 从下一次请求开始生效，不需要重启 dsh。
 
-密钥是只写的：保存后界面只拿得到脱敏描述符。它存放在 `$DSH_HOME/.credentials.yaml`，设置页只保留引用。不要把 Key 粘贴到公开仓库或截图里。
+API Key 只能写入、不能读回：保存之后，界面上显示的是抹掉内容的描述文字（脱敏描述符），不是 Key 本身。Key 存放在 `$DSH_HOME/.credentials.yaml` 文件里，设置页只保留引用。不要把 Key 粘贴到公开仓库或截图里。
 
 ## 常见失败
 
@@ -62,10 +62,10 @@ related: ["install/npx", "models"]
 | 浏览器打开 3080 显示 401 | 直接访问了不带 token 的地址 | 用应用打开的页面，不要手输裸地址 |
 | 安装后打不开 | 系统版本或架构不匹配 | 核对下载页要求；Windows 只有 x64 包 |
 
-## 什么时候不该用桌面版
+## 不适合用桌面版的三种情况
 
-- 没有图形界面的服务器
-- 需要通过 SSH 转发端口使用
-- 要跑自动化、headless 或接入其他程序
+- 你要装的机器没有图形界面，例如只有命令行的服务器
+- 只能靠 SSH 转发端口来打开界面
+- 要跑自动化脚本、headless（不用界面）模式，或让其他程序接入 dsh
 
-这些场景用 [npx](./npx.mdx) 或源码方式更合适。
+这三种情况改用 [npx](./npx.mdx) 或源码安装更合适。

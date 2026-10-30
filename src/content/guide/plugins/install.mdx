@@ -18,15 +18,15 @@ related: ["plugins", "troubleshooting"]
 
 ## 三种安装入口
 
-- **Web UI 插件页**：日常安装，看得见状态；先打开带 token 的 Web UI 地址。
-- **命令行 `dsh plugin`**：适合服务器、脚本和需要留记录的场景；本机要有 pnpm。
-- **本地路径**：适合开发中的插件；本机要有 pnpm。
+- **Web UI 插件页**：适合日常安装，能在页面上看见安装状态；先打开带 token 的 Web UI 地址。
+- **命令行 `dsh plugin`**：适合在服务器上执行、写进脚本，以及需要留下安装记录的场景；本机要有 pnpm。
+- **本地路径**：适合还在开发中的插件，从本地目录直接装进 profile；本机要有 pnpm。
 
-三条路最后都落到 profile 的依赖里，区别只是谁来执行安装。
+三种入口都会把插件写进某个 profile 的依赖记录，区别只在于由谁执行安装命令。
 
 ## 命令行：dsh plugin add
 
-`dsh plugin` 本身不实现安装，它把参数原样转发给 profile 目录里的 pnpm。
+`dsh plugin` 本身不实现安装，而是把参数原样转发给 profile 目录里的 pnpm，实际安装由 pnpm 执行。
 
 ```bash
 dsh plugin --profile web add <package>
@@ -44,37 +44,37 @@ dsh plugin --profile web list
 dsh plugin --profile web remove <package>
 ```
 
-**实测坑：pnpm 必须先在 PATH 里。** 2026-10-27 在 Windows 上执行 `dsh plugin --profile web list`，因为本机没有 pnpm，命令直接失败：
+**实测问题：PATH 里必须先有 pnpm。** 2026-10-27 在 Windows 上执行 `dsh plugin --profile web list`，因为本机没有 pnpm，命令直接失败：
 
 ```text
 'pnpm' 不是内部或外部命令，也不是可运行的程序或批处理文件。
 dsh: plugin command failed; diagnostics: ...\.plugin-manager\logs\operation-...\pnpm.log
 ```
 
-先装 pnpm，再重试。诊断信息里的 `pnpm.log` 会保留 pnpm 的原始输出，比 dsh 的汇总行更有用。
+先安装 pnpm，再重新执行上面的 `dsh plugin` 命令。诊断信息里的 `pnpm.log` 会保留 pnpm 的原始输出，比 dsh 的汇总行更有用。
 
 ## Web UI：插件页与发现
 
-打开 Web UI 后，左侧进入“插件”页。这里能看到已安装的组合包，并逐个开关。
+打开 Web UI 后，从左侧导航进入“插件”页。插件页会列出已安装的组合包，每个组合包都有独立的开关。
 
-“发现”不是默认就有的。官方文档写明：DSH 不内置任何索引源；要在“发现”里浏览插件，得先打开“实验性插件”下的“自定义插件索引”，然后添加索引文件 URL。
+“发现”页默认没有索引源。官方文档写明：DSH 不内置任何索引源；要在“发现”页浏览插件，你要先打开“实验性插件”下的“自定义插件索引”，再添加索引文件 URL。
 
 添加索引时注意：
 
 - URL 必须是 `http:` 或 `https:`，不能带用户名、密码或 `#` 片段
-- 优先 HTTPS；能改 `http:` 索引的人也能改它列出的安装来源
-- 索引是第三方内容，安装确认框里的来源要自己核对
+- 优先 HTTPS；能修改 `http:` 索引内容的人，也能修改该索引列出的安装来源
+- 索引是第三方内容，安装确认框里显示的来源要你自己核对
 
 ## 本地路径安装（开发用）
 
-本地开发插件时，直接把目录装进一个测试 profile：
+本地开发插件时，把插件目录直接装进一个测试 profile。下面两条命令里的 `./examples/01-hello-plugin` 是相对路径，要在本手册仓库 dsh-handbook 的根目录执行：
 
 ```bash
 dsh plugin --profile hello add ./examples/01-hello-plugin
 dsh --profile hello --dump-config
 ```
 
-`--dump-config` 不需要模型 Key，能看到 profile 里是否多了你的插件。确认加载后再进主 profile，避免污染日常环境。
+`--dump-config` 不需要模型 Key，能看到 profile 里是否多了你的插件。确认插件加载成功后，再从测试 profile 装进主 profile，避免污染日常环境。
 
 ## 报错对照表
 

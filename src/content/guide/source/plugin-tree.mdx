@@ -22,12 +22,12 @@ faq:
   - q: "改 profile 的 cordis.patch.yml 就一定能覆盖默认值吗？"
     a: "不一定。home 层（$DSH_HOME/cordis.patch.yml）和 --patch 都在 profile 层之后应用，同一个 id 谁最后写谁生效。"
   - q: "--dump-config 看到的就是实际挂载的吗？"
-    a: "是。dump 和启动共用同一个 composeEntries()，它把同样的 patch 层合成为 entry 列表；但 !!js 表达式要等 Loader 激活时才求值，dump 里显示的是表达式原文。"
+    a: "是。dump 和启动共用同一个 composeEntries()，composeEntries() 把同样的 patch 层合成为 entry 列表；但 !!js 表达式要等 Loader 激活时才求值，dump 里显示的是表达式原文。"
 ---
 
-`dsh` 启动时没有一段“主程序”把各个模块逐个 `new` 出来。它先读一个 profile 目录，把目录里列出的 bundle 依次展开成 patch，再把用户自己的 patch 叠上去，最后交给 Cordis Loader 挂载。
+`dsh` 启动时没有一段“主程序”把各个模块逐个 `new` 出来。`dsh` 先读一个 profile 目录，把目录里列出的 bundle 依次展开成 patch，再把用户自己的 patch 叠上去，最后把这些 patch 层合成 entry 列表，交给 Cordis Loader 挂载。
 
-所谓“一切皆插件”，在代码里就是一条扁平的 entry 列表：每个 entry 指向一个插件包，插件包在挂载时注册服务、事件和副作用。Web 界面、工具注册表、模型适配器、agent loop 都在同一张列表里，没有哪个是特权内核。
+所谓“一切皆插件”，在代码里就是一条扁平的 entry 列表：每个 entry 指向一个插件包，插件包在被 Cordis Loader 挂载时注册服务、事件和副作用。Web 界面、工具注册表、模型适配器、agent loop 都在同一张列表里，没有哪个是特权内核。
 
 <figure class="figure">
   <a href="/diagrams/plugin-tree.png" target="_blank" rel="noopener" title="点击查看大图"><img src="/diagrams/plugin-tree.png" alt="dsh 插件树架构图：dsh --profile web 读取 Profile 目录，Bundle 层与用户 patch 层依次叠加，composeEntries() 生成 entry 列表，Cordis Loader 挂载运行中的服务，Web 与 Desktop 表面消费这些服务" width="2828" height="1216" loading="lazy" decoding="async" /></a>
@@ -56,15 +56,15 @@ $DSH_HOME/profiles/web/
 └─ cordis.yml          # 空的根配置 []
 ```
 
-`package.json` 里的 `dsh.profile.bundles` 是一个有序数组。随发行版交付的模板在 `apps/cli/src/profile-boot.ts` 里写成常量：Web 是 `base + web-app`，Headless 是 `base + headless`，SDK 是 `base + sdk-app`，`sdk-minimal` 则是单独的例外。
+`package.json` 里的 `dsh.profile.bundles` 是一个有序数组。随发行版交付的模板写在 `profile.ts:179-195` 的 `PROFILE_TEMPLATES` 常量里：Web 是 `base + web-app`，Headless 是 `base + headless`，SDK 是 `base + sdk-app`，`sdk-minimal` 则是单独的例外。
 
 `cordis.patch.yml` 是用户自己的 patch 文件，文件名由 `PROFILE_PATCH_FILENAME` 固定。`cordis.yml` 的初始内容是一个空数组 `[]`，表示“从零行 entry 开始，所有内容都由 patch 叠出来”。
 
-这个空根配置每次启动都会被重写。原因不是洁癖：Loader 的配置写回机制会把当前组合后的树写回根文件，如果根文件里留着上一次的组合结果，下一次启动就会把每个 `insert` 再插一遍。重写空根，等于每次启动都从同一张白纸开始。
+空的 `cordis.yml` 每次启动都会被重写。重写空根不是为了代码整洁：Loader 的配置写回机制会把当前组合后的树写回根文件，如果根文件里留着上一次的组合结果，下一次启动就会把每个 `insert` 再插一遍。每次启动都先重写空根，等于每次都从同一份空配置开始组合。
 
 ## Bundle 层：96 行写在同一个 insert 里
 
-`dsh-base` 是 Web、Headless、SDK、ACP 共享的第一层。它的 `cordis.patch.yml` 里只有一个顶层 `insert`，下面有 96 个 `- id:` 行。开头几行先是管理类和基础设施：
+`dsh-base` 是 Web、Headless、SDK、ACP 共享的第一层。`dsh-base` 的 `cordis.patch.yml` 里只有一个顶层 `insert`，下面有 96 个 `- id:` 行。开头几行先是管理类和基础设施：
 
 ```yaml
 - insert:
@@ -109,9 +109,9 @@ $DSH_HOME/profiles/web/
 
 > Row order carries no load semantics (activation is service-availability driven); the grouping is for readers.
 
-翻译成运行时的意思：一个插件声明 `inject: ['tools']`，它不会因为排在 `tools` 前面就先启动；Loader 会等 `tools` 服务出现后再激活它。排在前面的行只影响阅读，不影响依赖解析。
+换成运行时的说法：声明 `inject: ['tools']` 的插件，不会因为写在 `tools` 那一行前面就先启动；Loader 要等 `tools` 服务出现，才会激活声明了 `inject: ['tools']` 的那个插件。写在前面的行只影响阅读顺序，不影响依赖解析。
 
-`web-app` 是第二层。它不重复 base 的所有行，只按 id 覆盖需要改的行，再插入浏览器侧的行。例如 Web 需要覆盖 `tools`，把 PTC 模式的选择交给环境变量：
+`web-app` 是第二层。`web-app` 不重复 base 的所有行，只按 id 覆盖需要修改的行，再插入浏览器侧需要的行。例如 Web 需要覆盖 `tools` 这一行，把 PTC（Programmatic Tool Calling：让模型写一段代码、由这段代码去调用工具的模式）的选择交给环境变量：
 
 ```yaml
 - id: tools
@@ -119,9 +119,9 @@ $DSH_HOME/profiles/web/
     mode: !!js process.env.DSH_TOOLS_MODE
 ```
 
-这里有一个容易忽略的规则：**patch 替换目标行的整个 `config`，不合并字段。** 所以覆盖时必须把这一行拥有的每个键都重新写一遍。`web-app` 的注释里也明确说了这一点。理解这条规则，才能解释为什么有些行在 bundle 里看起来“重复”。
+上面这段覆盖里有一条容易忽略的规则：**patch 替换目标行的整个 `config`，不合并字段。** 所以覆盖某一行的时候，要把这一行拥有的每个键都重新写一遍。`web-app` 的注释里也明确写了这一点。理解这条规则，才能解释为什么有些行在 bundle 里看起来“重复”。
 
-## 用户层：最后写的人赢
+## 用户层：后应用的 patch 覆盖先应用的 patch
 
 `readProfilePatches()` 把 patch 层按下面的顺序拼起来：
 
@@ -131,7 +131,7 @@ $DSH_HOME/profiles/web/
 4. 启动器的 `--patch` overlay，按 argv 顺序
 5. 遥测开关生成的最后一个 patch
 
-这个顺序里最反直觉的是第 2 和第 3 步：home 层排在 profile 层之后。也就是说，机器级的 `$DSH_HOME/cordis.patch.yml` 会覆盖某个 profile 自己的设置。设计意图是“机器本地偏好适用于所有 profile”，但读代码时如果默认“越靠近 profile 越优先”，就会把覆盖关系判断反。
+五级顺序里最容易读反的是第 2 步和第 3 步：home 级 patch 排在 profile 级 patch 之后应用。也就是说，机器级的 `$DSH_HOME/cordis.patch.yml` 会覆盖某个 profile 自己的设置。设计意图是“机器本地偏好适用于所有 profile”，但如果你默认“越靠近 profile 越优先”，就会把覆盖关系判断反。
 
 所有层最后都交给同一个 `composeEntries()`：
 
@@ -146,27 +146,27 @@ export function composeEntries(
 }
 ```
 
-它从空数组开始，把每一层 clone 后拼成一个列表，再交给 `applyEntryPatches()` 逐条应用。同一个 id 被后面的层再次命中时，后面的写法覆盖前面的写法；没被命中的行保留。最终的 `EntryOptions[]` 就是 Loader 看到的全部内容。
+`composeEntries()` 从空数组开始，先把各层 patch 拼成一个列表，再整体复制一份，交给 `applyEntryPatches()` 逐条应用。同一个 id 被后面的层再次命中时，后面那一层的写法覆盖前面那一层的写法；没有被再次命中的行保留原样。合成出来的 `EntryOptions[]` 就是 Loader 看到的全部内容。
 
-`dsh --profile web --dump-config` 之所以可信，是因为它和启动共用这个函数。`profile.ts` 的注释说得很清楚：flag derivation 和 config dump 看到的是“exactly what mounts”。你在 dump 里看到的行，就是 Loader 要挂载的行；`!!js` 表达式例外，它要等 Loader 激活时才求值，dump 里保留表达式原文。
+`dsh --profile web --dump-config` 之所以可信，是因为这条 dump 命令和启动流程共用 `composeEntries()`。`profile.ts` 的注释说得很清楚：flag derivation 和 config dump 看到的是“exactly what mounts”。你在 dump 里看到的行，就是 Loader 要挂载的行；例外是 `!!js` 表达式，这类表达式要等 Loader 激活时才求值，dump 里保留的是表达式原文。
 
-## Loader 挂载后，服务才是主角
+## Loader 挂载完成之后，插件靠查找服务协作
 
 `boot()` 拿到根配置路径和 patch 层之后，把组合结果交给 Cordis Loader。Loader 逐个挂载 entry，插件在 `apply(ctx)` 里注册服务、事件和副作用。挂载完成后，其他插件通过 `ctx.llm`、`ctx.tools`、`ctx.agentLoop` 这样的 key 查找服务，而不是 `import` 具体实现。
 
-Web 界面也是这张列表里的一行。`web-app` 的 `web-runtime` 行负责挂载前端资源、注册 bash 运行时变量、打印访问地址；`webserver` 行负责绑定端口和路由。它们没有“内核”身份，和 `llm`、`session` 一样是插件行。把 Web 换成 Desktop 或 SDK，本质上只是换了一组 bundle 行，底下的 agent loop 和工具注册表还是同一套。
+Web 界面也只是 entry 列表里的一行。`web-app` 的 `web-runtime` 行负责挂载前端资源、注册 bash 运行时变量、打印访问地址；`webserver` 行负责绑定端口和路由。`web-runtime` 和 `webserver` 都没有“内核”身份，和 `llm`、`session` 一样是插件行。把 Web 换成 Desktop 或 SDK，换掉的只是一组 bundle 行，agent loop 和工具注册表还是同一套插件行。
 
 ## 自己验证
 
-不需要模型 Key。先看 base 层的前几行是否和源码一致：
+下面两步都不需要模型 Key。第一步检查 base 层的前几行是否和源码一致：
 
 ```bash
 dsh --profile web --dump-config | sed -n '1,20p'
 ```
 
-预期能看到 `tool-plugin-manager`、`plugin-manager`、`timer`、`hmr`、`llm`、`session` 这些 id。`!!js` 表达式会以原文出现，这是正常的。
+预期能看到 `tool-plugin-manager`、`plugin-manager`、`timer`、`hmr`、`llm`、`session` 这些 id。`!!js` 表达式会以原文出现，这属于正常现象：dump 阶段还不会求值。
 
-再装一个最小插件，确认它出现在 profile 的末尾：
+第二步再装一个最小插件，确认新装的插件出现在 profile 的末尾：
 
 ```bash
 # 需要 pnpm 在 PATH 里；dsh plugin 会把参数转发给 profile 目录里的 pnpm
@@ -182,19 +182,19 @@ dsh --profile hello --dump-config | tail -4
   name: dsh-plugin-hello
 ```
 
-`hello` 是一个测试 profile，不要把它当成日常使用的 `web`。你可以用 `--dump-config` 复现：Web profile 约 1229 行，加入 hello 插件后，输出末尾会多出 `dsh-plugin-hello`。
+`hello` 只是一个测试用的 profile，不要把 `hello` 当成日常使用的 `web`。你可以用 `--dump-config` 自己核一遍：Web profile 约 1229 行，加入 hello 插件后，输出末尾会多出 `dsh-plugin-hello`。
 
-如果你用 `npx` 而不是全局 `dsh`，把命令里的 `dsh` 换成 `npx -y @deepseek-ai/dsh@0.2.1-rc.2`。插件安装这一步本机需要 pnpm；没有 pnpm 时会直接报 `'pnpm' 不是内部或外部命令`，这不是插件本身的问题。
+如果你用 `npx` 而不是全局 `dsh`，把命令里的 `dsh` 换成 `npx -y @deepseek-ai/dsh@0.2.1-rc.2`。插件安装这一步本机需要 pnpm；没有 pnpm 时会直接报出 `'pnpm' 不是内部或外部命令`，这条报错指向缺 pnpm，不是插件本身的问题。
 
 ## 四个常见误解
 
-**“96 行就是 96 个同时启动的插件。”** 不是。96 是 base patch 里的 `- id:` 行数；其中有些行默认 `disabled: true`，有些行要等注入的服务出现才激活。行数不等于并发启动数。
+**“96 行就是 96 个同时启动的插件。”** 不是。96 是 base patch 里的 `- id:` 行数；其中有些行默认 `disabled: true`，有些行要等注入的服务出现才激活。行数不等于同时启动的插件数。
 
-**“patch 会合并 config。”** 不会。patch 按 id 定位行，替换整段 `config`。覆盖 `tools` 时如果只写 `mode`，这一行原来的其他键就没了；所以 bundle 的注释要求覆盖者重写它拥有的每个键。
+**“patch 会合并 config。”** 不会。patch 按 id 定位行，替换整段 `config`。覆盖 `tools` 时如果只写 `mode`，这一行原有的其他键就不存在了；所以 bundle 的注释要求覆盖者重写这一行拥有的每个键。
 
-**“profile 的 cordis.patch.yml 最后生效。”** 不一定。home 层和 `--patch` 都在它后面。判断覆盖关系时，看 `readProfilePatches()` 的拼接顺序，不要看文件离 profile 目录有多近。
+**“profile 的 cordis.patch.yml 最后生效。”** 不一定。home 级 patch 和 `--patch` 都在 profile 级 patch 之后应用。判断覆盖关系时，看 `readProfilePatches()` 的拼接顺序，不要根据文件在哪个目录来推断优先级。
 
-**“Web UI 是内核，其他都是扩展。”** 不是。Web UI 是 `dsh-web-app` bundle 里的一行 `web-runtime`；agent loop、工具注册表、模型适配器都能在没有 Web 的情况下工作。Headless、SDK、ACP 就是同一套底座的另外几种表面。
+**“Web UI 是内核，其他都是扩展。”** 不是。Web UI 是 `dsh-web-app` bundle 里的一行 `web-runtime`；agent loop、工具注册表、模型适配器都能在没有 Web 的情况下工作。Headless、SDK、ACP 用的是同一批 base 插件行，只是换成了另外几种 bundle 组合。
 
 ## 官方文档对应位置
 
@@ -202,4 +202,4 @@ dsh --profile hello --dump-config | tail -4
 - [Cordis 入门](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/docs/cordis-primer.zh.md)：插件、上下文、服务依赖、注册的可逆性
 - [app-boot README](https://github.com/deepseek-ai/deepseek-harness/blob/1f81c047fc48fa190a683e469daa699857e9afe8/packages/boot/app-boot/README.zh.md)：profile 启动数据与 patch 读取
 
-下一篇从“树长出来”进入“树怎么跑”：[一条消息怎样变成一个步骤](./message-lifecycle.mdx)。
+插件树挂载完成之后，一次运行怎么往下推进，见下一篇：[一条消息怎样变成一个步骤](./message-lifecycle.mdx)。
