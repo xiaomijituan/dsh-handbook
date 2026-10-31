@@ -3,12 +3,6 @@ import { absoluteBase } from '../consts';
 
 const images = [
   {
-    page: '/',
-    file: '/banner/hero-desktop.png',
-    title: 'dsh 中文手册：从一条命令到一棵插件树',
-    caption: '从安装、插件、版本到源码的阅读路径：装起来、接能力、读源码。',
-  },
-  {
     page: '/source/plugin-tree/',
     file: '/diagrams/plugin-tree.png',
     title: 'dsh 插件树：从 profile 到 Cordis Loader',
