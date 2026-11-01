@@ -5,7 +5,7 @@ import { withBase } from '../consts';
 <BaseLayout title="搜索" description="站内搜索" noindex>
   <div class="container prose" data-pagefind-ignore>
     <h1>站内搜索</h1>
-    <p>搜索只在生产构建里可用；本地开发需要先跑一次 <code>npm run build</code>。</p>
+    {import.meta.env.DEV && <p>本地开发需要先跑一次 <code>npm run build</code>，站内搜索才有索引可查。</p>}
     <link slot="head" rel="stylesheet" href={withBase('/pagefind/pagefind-ui.css')} />
     <div id="search"></div>
     <script is:inline src={withBase('/pagefind/pagefind-ui.js')}></script>

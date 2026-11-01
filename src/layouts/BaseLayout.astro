@@ -13,6 +13,7 @@ interface Props {
   keywords?: string[];
   image?: string;
   imageAlt?: string;
+  mainClass?: string;
 }
 const {
   title,
@@ -22,6 +23,7 @@ const {
   keywords = [],
   image = '/og/default.png',
   imageAlt = `${SITE_NAME}：安装、插件与源码`,
+  mainClass,
 } = Astro.props;
 const isHome = Astro.url.pathname === withBase('/');
 const pageTitle = isHome ? `${SITE_NAME}：安装、插件与源码` : `${title} · ${SITE_NAME}`;
@@ -37,8 +39,20 @@ const ogImage = new URL(withBase(image), site);
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     {keywords.length > 0 && <meta name="keywords" content={keywords.join(', ')} />}
-    <meta name="theme-color" content="#f7f5ef" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0e1116" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f6f7f4" />
+    <script is:inline>
+      (() => {
+        try {
+          const root = document.documentElement;
+          if (localStorage.getItem('dsh-theme') === 'dark') root.dataset.theme = 'dark';
+          if (localStorage.getItem('dsh-accent') === 'blue') root.dataset.accent = 'blue';
+          if (root.dataset.theme === 'dark') {
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', '#0e1116');
+          }
+        } catch {}
+      })();
+    </script>
     <link rel="canonical" href={canonical} />
     <link rel="alternate" hreflang="zh-CN" href={canonical} />
     <link rel="alternate" hreflang="x-default" href={canonical} />
@@ -66,7 +80,7 @@ const ogImage = new URL(withBase(image), site);
     <a class="skip-link" href="#main">跳到正文</a>
     <SiteHeader />
     <slot name="banner" />
-    <main id="main"><slot /></main>
+    <main id="main" class={mainClass}><slot /></main>
     <SiteFooter />
   </body>
 </html>

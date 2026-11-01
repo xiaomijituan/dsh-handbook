@@ -5,6 +5,7 @@ const { dsh, date } = Astro.props.verified;
 const iso = new Date(date).toISOString().slice(0, 10);
 ---
 <p class="version-badge">
-  <span>核验于 {iso}</span><span aria-hidden="true">·</span><span>dsh {dsh}</span>
+  <span>核验于 {iso}</span>
+  <span>dsh {dsh}</span>
   <a href={withBase('/versions/')}>版本说明</a>
 </p>

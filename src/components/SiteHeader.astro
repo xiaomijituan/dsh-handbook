@@ -19,6 +19,66 @@ const path = Astro.url.pathname;
     <div class="header-actions">
       <a href={withBase('/search/')} aria-label="搜索">搜索</a>
       <a href={GITHUB_URL} rel="noopener">GitHub</a>
+      <button class="accent-toggle" type="button" data-accent-toggle aria-label="当前绿色强调色，点击换成蓝色" aria-pressed="false" title="当前绿色强调色，点击换成蓝色">
+        <span class="accent-toggle__dot" aria-hidden="true"></span>
+      </button>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换到深色模式" aria-pressed="false" title="切换到深色模式">
+        <svg class="theme-toggle__icon theme-toggle__icon--moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M20.4 14.2A8.5 8.5 0 0 1 9.8 3.6 8.5 8.5 0 1 0 20.4 14.2Z"></path>
+        </svg>
+        <svg class="theme-toggle__icon theme-toggle__icon--sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path>
+        </svg>
+      </button>
     </div>
   </div>
 </header>
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    const themeButton = document.querySelector('[data-theme-toggle]');
+    const accentButton = document.querySelector('[data-accent-toggle]');
+    const meta = document.querySelector('meta[name="theme-color"]');
+    const themeLabel = (dark) => (dark ? '切换到浅色模式' : '切换到深色模式');
+    const accentLabel = (blue) => (blue ? '当前蓝色强调色，点击换成绿色' : '当前绿色强调色，点击换成蓝色');
+    const apply = () => {
+      const dark = root.dataset.theme === 'dark';
+      const blue = root.dataset.accent === 'blue';
+      if (themeButton) {
+        themeButton.setAttribute('aria-pressed', String(dark));
+        themeButton.setAttribute('aria-label', themeLabel(dark));
+        themeButton.setAttribute('title', themeLabel(dark));
+      }
+      if (accentButton) {
+        accentButton.setAttribute('aria-pressed', String(blue));
+        accentButton.setAttribute('aria-label', accentLabel(blue));
+        accentButton.setAttribute('title', accentLabel(blue));
+      }
+      if (meta) meta.setAttribute('content', dark ? '#0e1116' : '#f6f7f4');
+    };
+    if (themeButton) {
+      themeButton.addEventListener('click', () => {
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        if (next === 'dark') root.dataset.theme = 'dark';
+        else delete root.dataset.theme;
+        try {
+          localStorage.setItem('dsh-theme', next);
+        } catch {}
+        apply();
+      });
+    }
+    if (accentButton) {
+      accentButton.addEventListener('click', () => {
+        const next = root.dataset.accent === 'blue' ? 'green' : 'blue';
+        if (next === 'blue') root.dataset.accent = 'blue';
+        else delete root.dataset.accent;
+        try {
+          localStorage.setItem('dsh-accent', next);
+        } catch {}
+        apply();
+      });
+    }
+    apply();
+  })();
+</script>

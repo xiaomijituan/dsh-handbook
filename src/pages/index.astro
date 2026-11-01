@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import VersionStatusBar from '../components/VersionStatusBar.astro';
 import { getCollection } from 'astro:content';
-import { SITE_NAME, OFFICIAL_DOCS, OFFICIAL_REPO, formatCheckedDate, withBase } from '../consts';
+import { OFFICIAL_DOCS, OFFICIAL_REPO, formatCheckedDate, withBase } from '../consts';
 import versions from '../data/versions.json';
 
 const pages = await getCollection('guide');
@@ -17,7 +17,7 @@ const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: SITE_NAME,
+    name: 'DeepSeek Harness 中文手册',
     url: siteRoot,
     inLanguage: 'zh-CN',
     potentialAction: {
@@ -32,103 +32,188 @@ const jsonLd = [
   title="首页"
   description="DeepSeek Harness 中文手册：安装、插件配置、版本差异与排错，每页标注本站核验的 dsh 版本与日期。"
   jsonLd={jsonLd}
+  mainClass="home-main"
 >
-  <section class="hero-banner" slot="banner">
+  <section class="hero-banner">
     <div class="hero-banner__inner container">
       <div class="hero-banner__copy">
-        <p class="hero-banner__kicker">DEEPSEEK HARNESS · 中文手册</p>
-        <p class="hero-banner__title">从一条命令，<br />到一棵插件树</p>
-        <p class="hero-banner__lead">安装 · 插件 · 版本 · 源码，每一步都能自己复核</p>
+        <p class="hero-banner__kicker">
+          <span class="hero-banner__kicker-brand">DEEPSEEK HARNESS</span>
+          <span class="hero-banner__kicker-rule" aria-hidden="true"></span>
+          <span class="hero-banner__kicker-cn">中文手册</span>
+        </p>
+        <h1 class="hero-banner__title">从一条命令，<br />到一棵插件树</h1>
+        <p class="hero-banner__lead">dsh（DeepSeek Harness）把模型、工具、插件和你本机的工作目录接在一起运行。这本手册从安装讲到源码，每一步都能自己复核。</p>
+        <div class="hero-banner__actions">
+          <a class="button button--start" href={withBase('/install/desktop/')}>第一次用：安装桌面版</a>
+          <a class="hero-banner__alt" href={withBase('/install/')}>三种安装方式怎么选</a>
+        </div>
       </div>
-      <div class="hero-banner__flow" role="img" aria-label="入门三步：01 装起来，02 接能力，03 读源码">
-        <div class="hero-node" style="--node: #86a7ff">
-          <span class="hero-node__num">01</span>
-          <span class="hero-node__label"><b>装起来</b><small>INSTALL</small></span>
+
+      <div class="hero-art">
+        <div class="hero-art__command">
+          <span class="hero-art__prompt" aria-hidden="true">$</span>
+          <code>npx @deepseek-ai/dsh@latest web</code>
         </div>
-        <span class="hero-wire" aria-hidden="true"></span>
-        <div class="hero-node" style="--node: #4f9d7a">
-          <span class="hero-node__num">02</span>
-          <span class="hero-node__label"><b>接能力</b><small>PLUGINS</small></span>
+        <p class="hero-art__note">需要 Node 与 DeepSeek API Key。启动后浏览器会打开带 token 的地址。<a class="hero-art__note-link" href={withBase('/install/npx/')}>完整步骤</a></p>
+        <div class="hero-art__assembly">
+          <p class="hero-art__caption">启动时，dsh 在读什么</p>
+          <ul class="hero-tree">
+            <li>
+              <code>profile</code><span>列出要用的组合包</span>
+              <ul>
+                <li>
+                  <code>bundle</code><span>一组配置改动</span>
+                  <ul>
+                    <li>
+                      <code>patch</code><span>按 id 替换配置</span>
+                      <ul>
+                        <li class="hero-tree__result">
+                          <code>loader</code><span>合成运行中的服务</span>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
         </div>
-        <span class="hero-wire" aria-hidden="true"></span>
-        <div class="hero-node" style="--node: #d3a53a">
-          <span class="hero-node__num">03</span>
-          <span class="hero-node__label"><b>读源码</b><small>SOURCE</small></span>
-        </div>
+        <a class="hero-art__link" href={withBase('/source/plugin-tree/')}>看插件树怎样组装</a>
       </div>
     </div>
+
+    <nav class="hero-tracks container" aria-label="三条阅读路线">
+      <a class="hero-track hero-track--install" href={withBase('/install/')}>
+        <span class="hero-track__meta">
+          <span class="hero-track__num">01</span>
+          <span class="hero-track__dot" aria-hidden="true"></span>
+          <span class="hero-track__tag">INSTALL</span>
+        </span>
+        <span class="hero-track__name">装起来</span>
+        <span class="hero-track__desc">桌面版、npx、源码</span>
+      </a>
+      <a class="hero-track hero-track--plugins" href={withBase('/plugins/')}>
+        <span class="hero-track__meta">
+          <span class="hero-track__num">02</span>
+          <span class="hero-track__dot" aria-hidden="true"></span>
+          <span class="hero-track__tag">PLUGINS</span>
+        </span>
+        <span class="hero-track__name">接能力</span>
+        <span class="hero-track__desc">装插件、写插件、排错</span>
+      </a>
+      <a class="hero-track hero-track--source" href={withBase('/source/')}>
+        <span class="hero-track__meta">
+          <span class="hero-track__num">03</span>
+          <span class="hero-track__dot" aria-hidden="true"></span>
+          <span class="hero-track__tag">SOURCE</span>
+        </span>
+        <span class="hero-track__name">读源码</span>
+        <span class="hero-track__desc">插件树、消息、工具</span>
+      </a>
+    </nav>
   </section>
+
   <div class="container">
-    <section class="hero">
-      <p class="hero__eyebrow">dsh · 中文上手手册</p>
-      <h1>DeepSeek Harness 中文手册</h1>
-      <p class="hero__lead">dsh（DeepSeek Harness）是把 AI 模型、工具、插件和本机的工作目录接在一起运行的程序，由 DeepSeek 开源。这本手册先讲怎么把 dsh 安装好、运行起来，再解释插件与版本，读源码的部分放在最后。</p>
-      <p class="hero__meta">本站核验于 {formatCheckedDate(versions.checkedAt)} · dsh {versions.npm.latest} · <a href={withBase('/versions/')}>版本差异</a></p>
-      <div class="hero__actions">
-        <a class="button button--primary" href={withBase('/install/desktop/')}>第一次用：安装桌面版</a>
-        <a class="button" href={withBase('/install/')}>三种安装方式怎么选</a>
+    <div class="status-strip">
+      <span><span class="status-strip__label">核验</span>{formatCheckedDate(versions.checkedAt)}</span>
+      <span><span class="status-strip__label">dsh</span><code>{versions.npm.latest}</code></span>
+      <a href={withBase('/versions/')}>版本差异</a>
+    </div>
+
+    <section class="section">
+      <div class="section-intro">
+        <h2>你属于哪种情况</h2>
+        <p>第一次来就按第一条走；已经装好，直接看卡住或想深入的那条。</p>
       </div>
-      <p class="hero__reassure">不需要先懂命令行，也不需要先读源码。源码那几篇是选修内容，等 dsh 能在本机跑起来之后再看更省力。</p>
+
+      <div class="decision-grid">
+        <a class="decision-card decision-card--feature" href={withBase('/install/desktop/')}>
+          <span class="decision-card__main">
+            <span class="decision-card__label">第一次用</span>
+            <span class="decision-card__title">先把 dsh 装起来</span>
+          </span>
+          <span class="decision-card__aside">
+            <span class="decision-card__desc">桌面版最省事。想临时试一次可以走 npx；想从源码跑，安装页也写了准备条件。</span>
+            <span class="decision-card__go">安装桌面版</span>
+          </span>
+        </a>
+        <a class="decision-card" href={withBase('/plugins/install/')}>
+          <span class="decision-card__label">卡住了</span>
+          <span class="decision-card__title">插件装不上</span>
+          <span class="decision-card__desc">先按现象查报错对照表，再决定从 Web UI、命令行还是本地路径装。</span>
+          <span class="decision-card__go">插件安装</span>
+        </a>
+        <a class="decision-card" href={withBase('/plugins/first-plugin/')}>
+          <span class="decision-card__label">想深入</span>
+          <span class="decision-card__title">写第一个插件</span>
+          <span class="decision-card__desc">先写一个最小插件，确认启动日志里有加载记录，再学注册工具和发布。</span>
+          <span class="decision-card__go">最小插件</span>
+        </a>
+      </div>
     </section>
 
     <section class="section">
-      <h2>你属于哪种情况</h2>
-      <div class="paths">
-        <a class="path" href={withBase('/install/')}>
-          <span class="path__kicker">第一次用</span>
-          <span class="path__title">先把 dsh 装起来</span>
-          <span class="path__desc">桌面版、npx（在命令行里启动，适合临时试一次）、源码三种方式，每种都写了准备条件和常见失败的处理。</span>
-        </a>
-        <a class="path" href={withBase('/plugins/install/')}>
-          <span class="path__kicker">卡住了</span>
-          <span class="path__title">插件装不上</span>
-          <span class="path__desc">Web UI 的插件页、命令行、本地路径三种安装入口，一张报错对照表，先按现象找到原因，再决定怎么处理。</span>
-        </a>
-        <a class="path" href={withBase('/plugins/first-plugin/')}>
-          <span class="path__kicker">想深入</span>
-          <span class="path__title">写第一个插件</span>
-          <span class="path__desc">先写一个最小插件，确认启动日志里有加载记录，再学注册工具和发布到 npm 与 GitHub。</span>
-        </a>
+      <div class="section-intro">
+        <h2>装完先做这三件事</h2>
+        <p>顺序不重要，但三件都做完，Web UI 才算真的能用。</p>
       </div>
-    </section>
-
-    <details class="quickstart-panel">
-      <summary>展开命令行启动步骤（需要 Node）</summary>
-      <div class="quickstart">
-        <pre><code>npx @deepseek-ai/dsh@latest web</code></pre>
-        <p class="quickstart__note">运行这条命令之前，本机要有 Node，还要有 DeepSeek API Key。dsh 启动后默认在本机的 <code>http://127.0.0.1:3080</code> 上等待访问，浏览器会自动打开带 token（启动时生成的访问串）的地址。打开不带 token 的地址会显示 401（服务端拒绝没带 token 的请求），这不等于安装失败：改用启动日志里带 token 的地址即可。</p>
-        <a href={withBase('/install/npx/')}>完整的 npx 步骤 →</a>
-      </div>
-    </details>
-
-    <section class="section">
-      <h2>装完先做这三件事</h2>
-      <ol class="steps">
-        <li><strong>填 API Key。</strong>API Key 是一串用来调用 DeepSeek 模型的访问口令。打开设置 → 模型，在 DeepSeek 卡片里填入 API Key 并保存；保存后的下一次请求就会用到刚保存的 Key，不需要重启服务。见 <a href={withBase('/models/')}>模型配置</a>。</li>
-        <li><strong>选工作区。</strong>dsh 把工作区当作默认的读写位置，第一次启动后要在界面里选一次。没有选工作区时，界面上的输入框不可用。</li>
-        <li><strong>装一个插件，确认插件装上了。</strong>profile 是 dsh 的一个配置目录，一个 profile 装一套插件，Web UI 只显示当前 profile 里已装的插件。装完不显示，多半是插件装进了另一个 profile：先确认插件装进了哪个 profile，再确认 Web UI 用的是同一个。见 <a href={withBase('/plugins/install/')}>插件安装</a>。</li>
+      <ol class="task-list">
+        <li>
+          <span class="task-list__num">01</span>
+          <div>
+            <h3>填 API Key</h3>
+            <p>API Key 是一串用来调用 DeepSeek 模型的访问口令。打开设置 → 模型，在 DeepSeek 卡片里填入并保存；保存后的下一次请求就会用到它，不需要重启服务。见 <a href={withBase('/models/')}>模型配置</a>。</p>
+          </div>
+        </li>
+        <li>
+          <span class="task-list__num">02</span>
+          <div>
+            <h3>选工作区</h3>
+            <p>dsh 把工作区当作默认的读写位置，第一次启动后要在界面里选一次。没有选工作区时，界面上的输入框不可用。</p>
+          </div>
+        </li>
+        <li>
+          <span class="task-list__num">03</span>
+          <div>
+            <h3>装一个插件，确认插件装上了</h3>
+            <p>profile 是 dsh 的一个配置目录，一个 profile 装一套插件。装完不显示，多半是插件装进了另一个 profile：先确认插件装进了哪个 profile，再确认 Web UI 用的是同一个。见 <a href={withBase('/plugins/install/')}>插件安装</a>。</p>
+          </div>
+        </li>
       </ol>
     </section>
 
     <section class="section" id="source">
-      <h2>读源码：三条主线</h2>
-      <div class="paths">
-        <a class="path" href={withBase('/source/plugin-tree/')}>
-          <span class="path__kicker">源码 01</span>
-          <span class="path__title">插件树的组装过程</span>
-          <span class="path__desc">profile（列出要用哪些组合包的一个目录）、bundle（一组配置改动的分发单位）、patch（按 id 替换整段配置的片段）逐层合成运行中的服务；base 组合包是共享的第一层，里面有 96 行配置。</span>
-        </a>
-        <a class="path" href={withBase('/source/message-lifecycle/')}>
-          <span class="path__kicker">源码 02</span>
-          <span class="path__title">一条消息怎样变成一个步骤</span>
-          <span class="path__desc">一条消息从被领取、组装提示词、冻结请求，到流式返回和写入日志，中间会留下哪些记录。</span>
-        </a>
-        <a class="path" href={withBase('/source/tool-pipeline/')}>
-          <span class="path__kicker">源码 03</span>
-          <span class="path__title">一次工具调用要过哪些关卡</span>
-          <span class="path__desc">模型要用工具时，一次调用要按顺序经过审批、各项守卫、执行和后置处理，最后冻结成一条结果；调用被拒绝也算一种结果。</span>
-        </a>
+      <div class="section-intro">
+        <h2>读源码：三条主线</h2>
+        <p>源码文章固定到 <code>{versions.github.tag}</code> 的 commit，行号只对那份源码有效。</p>
       </div>
+      <ol class="source-grid">
+        <li>
+          <a class="source-card" href={withBase('/source/plugin-tree/')}>
+            <span class="source-card__num">01</span>
+            <strong class="source-card__title">插件树的组装过程</strong>
+            <span class="source-card__desc">profile、bundle、patch 逐层合成运行中的服务；base 组合包是共享的第一层，里面有 96 行配置。</span>
+            <span class="source-card__go">读这一篇</span>
+          </a>
+        </li>
+        <li>
+          <a class="source-card" href={withBase('/source/message-lifecycle/')}>
+            <span class="source-card__num">02</span>
+            <strong class="source-card__title">一条消息怎样变成一个步骤</strong>
+            <span class="source-card__desc">一条消息从被领取、组装提示词、冻结请求，到流式返回和写入日志，中间会留下哪些记录。</span>
+            <span class="source-card__go">读这一篇</span>
+          </a>
+        </li>
+        <li>
+          <a class="source-card" href={withBase('/source/tool-pipeline/')}>
+            <span class="source-card__num">03</span>
+            <strong class="source-card__title">一次工具调用要过哪些关卡</strong>
+            <span class="source-card__desc">模型要用工具时，一次调用要按顺序经过审批、各项守卫、执行和后置处理，最后冻结成一条结果；调用被拒绝也算一种结果。</span>
+            <span class="source-card__go">读这一篇</span>
+          </a>
+        </li>
+      </ol>
     </section>
 
     <div class="split">
@@ -146,8 +231,8 @@ const jsonLd = [
 
       <section class="section">
         <h2>核验方法</h2>
-        <p>“核验”分两种情况：能在本机运行的命令，都在 Windows 11 + Node 24 的环境下执行过一次，本站把这种情况标为“实测”；本机跑不了的步骤按官方文档核对，并在页面上写明。每页头部标注核验到的 dsh 版本与核验日期，超过 30 天会显示提示条。源码文章固定到 <code>{versions.github.tag}</code> 的 commit，行号只对那份源码有效。</p>
-        <h2>权威来源</h2>
+        <p>能在本机运行的命令，都在 Windows 11 + Node 24 的环境下执行过一次，本站把这种情况标为“实测”；本机跑不了的步骤按官方文档核对，并在页面上写明。每页头部标注核验到的 dsh 版本与核验日期，超过 30 天会显示提示条。</p>
+        <h3>权威来源</h3>
         <ul class="links">
           <li><a href={OFFICIAL_DOCS} rel="noopener">官方文档</a>：dsh 的术语和接口定义以官方文档为准。</li>
           <li><a href={OFFICIAL_REPO} rel="noopener">官方仓库</a>：dsh 的源码和版本发布记录都在官方仓库。</li>
@@ -163,406 +248,626 @@ const jsonLd = [
   .hero-banner {
     position: relative;
     overflow: hidden;
-    min-height: 300px;
-    border-bottom: 1px solid var(--line);
-    background: #0e1116;
+    border-bottom: 1px solid var(--hero-border);
+    background: var(--hero-bg);
   }
   .hero-banner::before {
     content: "";
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(rgb(134 167 255 / 8%) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(134 167 255 / 8%) 1px, transparent 1px);
-    background-size: 40px 40px;
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
-    mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
+      linear-gradient(var(--hero-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--hero-grid) 1px, transparent 1px);
+    background-size: 48px 48px;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
     pointer-events: none;
   }
   .hero-banner::after {
     content: "";
     position: absolute;
     inset: 0;
-    background:
-      radial-gradient(900px 900px at calc(50% - 370px) -430px, rgb(47 91 215 / 36%), transparent 66%),
-      radial-gradient(760px 760px at calc(50% + 370px) -360px, rgb(79 157 122 / 18%), transparent 66%);
+    background-image: var(--hero-grain);
     pointer-events: none;
   }
   .hero-banner__inner {
     position: relative;
     z-index: 1;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
     align-items: center;
-    justify-content: space-between;
-    gap: 32px;
-    min-height: 300px;
+    gap: 64px;
+    padding-block: 56px 40px;
   }
   .hero-banner__copy {
-    max-width: 520px;
+    max-width: 560px;
   }
   .hero-banner__kicker {
-    margin: 0 0 14px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 18px;
     line-height: 1;
-    color: #86a7ff;
+  }
+  .hero-banner__kicker-brand {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    color: var(--hero-kicker);
+  }
+  .hero-banner__kicker-rule {
+    width: 20px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--hero-rule), transparent);
+  }
+  .hero-banner__kicker-cn {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--hero-kicker-cn);
   }
   .hero-banner__title {
     margin: 0;
-    font-size: 64px;
-    line-height: 1.08;
-    letter-spacing: -0.035em;
+    font-family: var(--font-display);
+    font-size: 62px;
     font-weight: 700;
-    color: #f3f7fb;
+    line-height: 1.18;
+    letter-spacing: 0.01em;
+    color: var(--hero-title);
+    word-break: keep-all;
   }
   .hero-banner__lead {
-    margin: 16px 0 0;
-    font-size: 18px;
-    line-height: 1.5;
-    color: #9aa8b6;
+    max-width: 32em;
+    margin: 20px 0 0;
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--hero-body);
   }
-  .hero-banner__flow {
-    display: flex;
-    align-items: center;
-    flex: none;
-  }
-  .hero-node {
-    position: relative;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    width: 160px;
-    padding: 16px;
-    border: 1px solid #2b3642;
-    border-radius: 10px;
-    background: rgb(21 26 33 / 86%);
-    box-shadow: 0 18px 50px rgb(0 0 0 / 28%);
-  }
-  .hero-node::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    border-radius: 10px;
-    border-top: 1px solid var(--node);
-    opacity: 0.55;
-    pointer-events: none;
-  }
-  .hero-node__num {
-    padding-top: 3px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    line-height: 1.2;
-    color: var(--node);
-  }
-  .hero-node__label b {
-    display: block;
-    font-size: 18px;
-    line-height: 1.4;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: #e9eef4;
-  }
-  .hero-node__label small {
-    display: block;
-    margin-top: 3px;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    line-height: 1.2;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #6f7d8b;
-  }
-  .hero-wire {
-    position: relative;
-    display: block;
-    flex: none;
-    width: 26px;
-    height: 1px;
-    background: #2b3642;
-  }
-  .hero-wire::after {
-    content: "";
-    position: absolute;
-    right: 0;
-    top: 50%;
-    width: 6px;
-    height: 6px;
-    margin-top: -3px;
-    border-radius: 50%;
-    background: #86a7ff;
-    box-shadow: 0 0 14px #86a7ff;
-  }
-  @media (max-width: 1139px) {
-    .hero-banner {
-      min-height: 0;
-    }
-    .hero-banner__inner {
-      flex-direction: column;
-      align-items: stretch;
-      justify-content: center;
-      gap: 28px;
-      padding-block: 36px;
-    }
-    .hero-banner__copy {
-      max-width: none;
-    }
-    .hero-banner__title {
-      font-size: 46px;
-    }
-    .hero-banner__flow {
-      width: 100%;
-      max-width: 600px;
-    }
-    .hero-node {
-      flex: 1;
-      width: auto;
-      min-width: 0;
-    }
-    .hero-wire {
-      width: 16px;
-    }
-  }
-  @media (max-width: 720px) {
-    .hero-banner::before {
-      background-size: 32px 32px;
-    }
-    .hero-banner__inner {
-      gap: 22px;
-      padding-block: 28px;
-    }
-    .hero-banner__kicker {
-      margin-bottom: 10px;
-      font-size: 10px;
-    }
-    .hero-banner__title {
-      font-size: 38px;
-    }
-    .hero-banner__lead {
-      display: none;
-    }
-    .hero-node {
-      gap: 8px;
-      padding: 10px 12px;
-      border-radius: 8px;
-    }
-    .hero-node__num {
-      padding-top: 2px;
-      font-size: 9px;
-    }
-    .hero-node__label b {
-      font-size: 15px;
-    }
-    .hero-node__label small {
-      margin-top: 1px;
-      font-size: 8px;
-    }
-    .hero-wire {
-      width: 10px;
-    }
-  }
-  @media (max-width: 400px) {
-    .hero-node {
-      gap: 6px;
-      padding: 8px 10px;
-    }
-    .hero-node__num {
-      padding-top: 1px;
-      font-size: 8px;
-    }
-    .hero-node__label b {
-      font-size: 14px;
-    }
-    .hero-node__label small {
-      font-size: 7px;
-    }
-    .hero-wire {
-      width: 8px;
-    }
-  }
-  .hero {
-    padding: var(--space-7) 0 var(--space-6);
-    border-bottom: 1px solid var(--line);
-  }
-  .hero__meta {
-    margin: var(--space-4) 0 0;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--ink-faint);
-  }
-  .hero__meta a {
-    color: var(--ink-faint);
-  }
-  .hero__actions {
+  .hero-banner__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-top: var(--space-5);
+    align-items: center;
+    gap: 12px 22px;
+    margin-top: 30px;
   }
-  .button {
+  .button--start {
     display: inline-flex;
     align-items: center;
-    padding: 10px 16px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    background: var(--paper-raised);
-    color: var(--ink);
-    font-size: var(--text-sm);
+    padding: var(--hero-button-padding);
+    border: 1px solid var(--hero-button-border);
+    border-bottom: var(--hero-button-underline-width) solid var(--hero-button-underline);
+    border-radius: var(--hero-button-radius);
+    background: var(--hero-button-bg);
+    color: var(--hero-button-ink);
+    font-size: var(--hero-button-size);
     font-weight: 600;
     text-decoration: none;
+    box-shadow: var(--hero-button-shadow);
+    -webkit-backdrop-filter: var(--hero-button-glass);
+    backdrop-filter: var(--hero-button-glass);
+    transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
   }
-  .button:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+  .button--start:hover,
+  .button--start:focus-visible {
+    background: var(--hero-button-hover-bg);
+    border-color: var(--hero-button-hover-border);
+    border-bottom-color: var(--hero-button-hover-underline);
+    box-shadow: var(--hero-button-hover-shadow);
+    transform: translateY(-1px);
   }
-  .button--primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-ink);
+  .hero-banner__alt {
+    color: var(--hero-alt);
+    font-size: 14px;
+    text-decoration-color: var(--hero-alt-line);
+    text-underline-offset: 4px;
   }
-  .button--primary:hover {
-    background: var(--accent);
-    color: var(--accent-ink);
-    filter: brightness(1.06);
+  .hero-banner__alt:hover {
+    color: var(--hero-alt-hover);
+    text-decoration-color: var(--hero-alt-hover-line);
   }
-  .hero__reassure {
-    margin: var(--space-4) 0 0;
-    font-size: var(--text-sm);
+
+  .hero-art {
+    justify-self: end;
+    width: 100%;
+    max-width: 500px;
+    padding: 20px 22px 18px;
+    border: 1px solid var(--hero-art-border);
+    border-radius: 10px;
+    background: var(--hero-art-bg);
+    box-shadow: var(--hero-art-shadow);
+    -webkit-backdrop-filter: var(--hero-glass);
+    backdrop-filter: var(--hero-glass);
+  }
+  .hero-art__command {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    overflow-x: auto;
+    padding: 12px 14px;
+    border: 1px solid var(--hero-command-border);
+    border-radius: 6px;
+    background: var(--hero-command-bg);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+  .hero-art__prompt {
+    color: var(--hero-result);
+  }
+  .hero-art__command code {
+    color: var(--hero-command-ink);
+    font-family: var(--font-mono);
+  }
+  .hero-art__note {
+    margin: 10px 0 0;
+    font-size: 12px;
+    line-height: 1.65;
+    color: var(--hero-art-muted);
+  }
+  .hero-art__note-link {
+    color: var(--hero-link);
+    text-decoration-color: var(--hero-link-line);
+    text-underline-offset: 3px;
+  }
+  .hero-art__note-link:hover {
+    color: var(--hero-link-hover);
+    text-decoration-color: var(--hero-link-hover-line);
+  }
+  .hero-art__assembly {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hero-line);
+  }
+  .hero-art__caption {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: var(--hero-art-muted);
+  }
+  .hero-tree,
+  .hero-tree ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .hero-tree ul {
+    padding-left: 18px;
+    border-left: 1px solid var(--hero-line);
+  }
+  .hero-tree li {
+    position: relative;
+    padding: 3px 0 3px 14px;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+  .hero-tree li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 14px;
+    width: 10px;
+    height: 1px;
+    background: var(--hero-line);
+  }
+  .hero-tree > li {
+    padding-left: 0;
+  }
+  .hero-tree > li::before {
+    display: none;
+  }
+  .hero-tree code {
+    margin-right: 10px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--hero-tree-code);
+  }
+  .hero-tree span {
+    color: var(--hero-tree-muted);
+  }
+  .hero-tree__result code,
+  .hero-tree__result span {
+    color: var(--hero-result);
+  }
+  .hero-tree__result code {
+    text-shadow: 0 0 16px color-mix(in srgb, var(--hero-result) 35%, transparent);
+  }
+  .hero-art__link {
+    display: inline-block;
+    margin-top: 12px;
+    color: var(--hero-link);
+    font-size: 12.5px;
+    text-decoration: none;
+    border-bottom: 1px solid var(--hero-link-line);
+  }
+  .hero-art__link:hover {
+    color: var(--hero-link-hover);
+    border-bottom-color: var(--hero-link-hover-line);
+  }
+
+  .hero-tracks {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding-bottom: 26px;
+  }
+  .hero-track {
+    --track-color: var(--dot-1);
+    display: flex;
+    flex-direction: column;
+    padding: 13px 16px 14px;
+    border: 1px solid var(--hero-card-border);
+    border-radius: 10px;
+    background: var(--hero-card-bg);
+    box-shadow: var(--hero-card-shadow);
+    -webkit-backdrop-filter: var(--hero-glass);
+    backdrop-filter: var(--hero-glass);
+    color: var(--hero-card-ink);
+    text-decoration: none;
+    transition: transform 160ms ease, border-color 160ms ease;
+  }
+  .hero-track--install {
+    --track-color: var(--dot-1);
+  }
+  .hero-track--plugins {
+    --track-color: var(--dot-2);
+  }
+  .hero-track--source {
+    --track-color: var(--dot-3);
+  }
+  .hero-track:hover,
+  .hero-track:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--hero-card-hover-border);
+  }
+  .hero-track__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+  }
+  .hero-track__num {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    color: var(--hero-card-muted);
+  }
+  .hero-track__dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--track-color);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--track-color) 55%, transparent);
+  }
+  .hero-track__tag {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    color: var(--hero-card-muted);
+  }
+  .hero-track__name {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+    color: var(--hero-card-ink);
+  }
+  .hero-track__desc {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--hero-card-muted);
+  }
+
+  .status-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px var(--space-6);
+    margin-top: var(--space-6);
+    padding: 0 0 14px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
     color: var(--ink-faint);
   }
-  .quickstart-panel {
-    margin-top: var(--space-5);
-    padding: var(--space-4) var(--space-5);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    background: var(--paper-raised);
+  .status-strip__label {
+    margin-right: 6px;
+    font-size: 12px;
+    color: var(--ink-faint);
   }
-  .quickstart-panel summary {
-    cursor: pointer;
-    font-size: var(--text-sm);
-    font-weight: 600;
+  .status-strip code {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
     color: var(--ink-soft);
   }
-  .quickstart-panel[open] summary {
-    margin-bottom: var(--space-4);
+  .status-strip a {
+    color: var(--ink-faint);
   }
-  .quickstart pre {
-    margin: 0;
-    padding: var(--space-3) var(--space-4);
-    background: var(--code-bg);
-    color: var(--code-ink);
-    border-radius: var(--radius-sm);
-    overflow-x: auto;
-  }
-  .quickstart pre code {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    background: none;
-    padding: 0;
-    color: inherit;
-  }
-  .quickstart__note {
-    margin: var(--space-3) 0;
-    font-size: var(--text-sm);
-    color: var(--ink-soft);
-  }
-  .quickstart a {
-    font-size: var(--text-sm);
-  }
-  .hero__eyebrow {
-    margin: 0 0 var(--space-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+  .status-strip a:hover {
     color: var(--accent);
   }
-  .hero h1 {
-    margin: 0 0 var(--space-3);
-    max-width: 18ch;
-    font-size: clamp(2rem, 5vw, 3.2rem);
-    line-height: 1.12;
-    letter-spacing: -0.03em;
-    word-break: keep-all;
-    text-wrap: balance;
-  }
-  .hero__lead {
-    max-width: 58ch;
-    margin: 0;
-    font-size: var(--text-lg);
-    color: var(--ink-soft);
-  }
+
   .section {
     margin-top: var(--space-8);
   }
-  .section h2 {
-    margin: 0 0 var(--space-4);
-    font-size: var(--text-2xl);
-    letter-spacing: -0.01em;
+  .section-intro {
+    max-width: 68ch;
+    margin-bottom: var(--space-5);
   }
-  .paths {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-3);
-  }
-  .path {
-    display: grid;
-    gap: var(--space-1);
-    padding: var(--space-5);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    background: var(--paper-raised);
-    color: var(--ink);
-    text-decoration: none;
-    transition: border-color var(--motion-fast), transform var(--motion-fast);
-  }
-  .path:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-  }
-  .path__kicker {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--ink-faint);
-  }
-  .path__title {
-    font-size: var(--text-xl);
+  .section-intro h2 {
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-display);
+    font-size: 1.75rem;
     font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
   }
-  .path__desc {
+  .section-intro p {
+    margin: 0;
     font-size: var(--text-sm);
+    line-height: 1.75;
     color: var(--ink-soft);
   }
-  .steps {
+
+  .decision-grid {
     display: grid;
-    gap: var(--space-3);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .decision-card {
+    display: flex;
+    flex-direction: column;
+    padding: 24px 26px;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    background: var(--glass-bg);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass);
+    backdrop-filter: var(--glass);
+    color: var(--ink);
+    text-decoration: none;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .decision-card:hover,
+  .decision-card:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--glass-hover-border);
+    box-shadow: var(--glass-shadow-hover);
+  }
+  .decision-card__label,
+  .decision-card__title,
+  .decision-card__desc {
+    display: block;
+  }
+  .decision-card__label {
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+  }
+  .decision-card__title {
+    margin-top: 8px;
+    font-family: var(--font-display);
+    font-size: 1.22rem;
+    font-weight: 600;
+    line-height: 1.45;
+    letter-spacing: 0.01em;
+  }
+  .decision-card__desc {
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  .decision-card__go {
+    width: fit-content;
+    margin-top: auto;
+    padding-top: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .decision-card--feature {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 48px;
+    padding: 28px 30px;
+    border-color: var(--feature-border);
+    background: var(--glass-bg);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass);
+    backdrop-filter: var(--glass);
+  }
+  .decision-card--feature:hover,
+  .decision-card--feature:focus-visible {
+    border-color: var(--glass-hover-border);
+    box-shadow: var(--glass-shadow-hover);
+  }
+  .decision-card--feature .decision-card__main {
+    flex: 0 0 42%;
+  }
+  .decision-card--feature .decision-card__aside {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .decision-card--feature .decision-card__label {
+    color: var(--accent);
+  }
+  .decision-card--feature .decision-card__title {
+    margin-top: 10px;
+    font-size: 1.72rem;
+    line-height: 1.35;
+  }
+  .decision-card--feature .decision-card__desc {
+    margin-top: 0;
+    max-width: 46ch;
+    font-size: 14.5px;
+  }
+  .decision-card--feature .decision-card__go {
+    margin-top: 20px;
+    padding: var(--hero-button-padding);
+    border: 1px solid var(--hero-button-border);
+    border-radius: var(--hero-button-radius);
+    background: var(--hero-button-bg);
+    color: var(--hero-button-ink);
+    font-size: var(--hero-button-size);
+    font-weight: 600;
+    box-shadow: var(--hero-button-shadow);
+    -webkit-backdrop-filter: var(--hero-button-glass);
+    backdrop-filter: var(--hero-button-glass);
+    transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  }
+  .decision-card--feature:hover .decision-card__go,
+  .decision-card--feature:focus-visible .decision-card__go {
+    background: var(--hero-button-hover-bg);
+    border-color: var(--hero-button-hover-border);
+    box-shadow: var(--hero-button-hover-shadow);
+    transform: translateY(-1px);
+  }
+
+  .task-list {
+    display: grid;
+    gap: 12px;
     margin: 0;
     padding: 0;
     list-style: none;
-    counter-reset: step;
   }
-  .steps li {
-    position: relative;
-    padding: var(--space-4) var(--space-5) var(--space-4) var(--space-8);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--paper-raised);
-    counter-increment: step;
+  .task-list li {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: 22px 26px;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    background: var(--glass-bg);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass);
+    backdrop-filter: var(--glass);
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
   }
-  .steps li::before {
-    content: counter(step);
-    position: absolute;
-    left: var(--space-5);
-    top: var(--space-4);
+  .task-list li:hover {
+    transform: translateY(-2px);
+    border-color: var(--glass-hover-border);
+    box-shadow: var(--glass-shadow-hover);
+  }
+  .task-list li > div {
+    max-width: 74ch;
+  }
+  .task-list__num {
+    padding-top: 7px;
     font-family: var(--font-mono);
-    font-size: var(--text-sm);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+  }
+  .task-list h3 {
+    margin: 0 0 6px;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+  }
+  .task-list p {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--ink-soft);
+  }
+
+  .source-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .source-grid > li {
+    display: flex;
+  }
+  .source-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 24px;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    background: var(--glass-bg);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass);
+    backdrop-filter: var(--glass);
+    color: var(--ink);
+    text-decoration: none;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .source-card:hover,
+  .source-card:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--glass-hover-border);
+    box-shadow: var(--glass-shadow-hover);
+  }
+  .source-card__num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
     color: var(--accent);
   }
+  .source-card__title {
+    display: block;
+    margin-top: 12px;
+    font-family: var(--font-display);
+    font-size: 1.22rem;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+  }
+  .source-card__desc {
+    display: block;
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--ink-soft);
+  }
+  .source-card__go {
+    width: fit-content;
+    margin-top: auto;
+    padding-top: 22px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
   .split {
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    gap: var(--space-7);
+    gap: 64px;
+  }
+  .split h2 {
+    margin: 0 0 var(--space-3);
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .split h3 {
+    margin: var(--space-5) 0 var(--space-2);
+    font-size: var(--text-base);
+    font-weight: 600;
+  }
+  .split p {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--ink-soft);
   }
   .recent,
   .links {
@@ -576,24 +881,234 @@ const jsonLd = [
     gap: var(--space-3);
     padding: var(--space-3) 0;
     border-bottom: 1px solid var(--line);
-    font-size: var(--text-sm);
+    font-size: 14px;
   }
   .recent time {
     color: var(--ink-faint);
     font-family: var(--font-mono);
+    font-size: 12px;
     white-space: nowrap;
   }
   .links li {
     margin-block: var(--space-2);
-    font-size: var(--text-sm);
+    font-size: 14px;
+    color: var(--ink-soft);
   }
-  @media (max-width: 860px) {
-    .paths,
-    .split {
+
+  @media (max-width: 1139px) {
+    .hero-banner__inner {
+      grid-template-columns: 1fr;
+      gap: 36px;
+      padding-block: 44px 36px;
+    }
+    .hero-banner__copy {
+      max-width: 620px;
+    }
+    .hero-banner__title {
+      font-size: 52px;
+    }
+    .hero-art {
+      justify-self: stretch;
+      max-width: none;
+    }
+  }
+  @media (max-width: 900px) {
+    .decision-card--feature {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 18px;
+      padding: 24px 26px;
+    }
+    .decision-card--feature .decision-card__main {
+      flex: none;
+    }
+    .decision-card--feature .decision-card__title {
+      font-size: 1.5rem;
+    }
+    .source-grid {
       grid-template-columns: 1fr;
     }
-    .hero {
-      padding-top: var(--space-6);
+  }
+  @media (max-width: 860px) {
+    .split {
+      grid-template-columns: 1fr;
+      gap: var(--space-7);
+    }
+  }
+  @media (max-width: 720px) {
+    .hero-banner::before {
+      background-size: 32px 32px;
+    }
+    .hero-banner__inner {
+      gap: 28px;
+      padding-block: 36px 28px;
+    }
+    .hero-banner__kicker {
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .hero-banner__kicker-brand {
+      font-size: 9.5px;
+      letter-spacing: 0.14em;
+    }
+    .hero-banner__kicker-cn {
+      font-size: 11.5px;
+    }
+    .hero-banner__title {
+      font-size: 38px;
+      line-height: 1.22;
+    }
+    .hero-banner__lead {
+      margin-top: 16px;
+      font-size: 15px;
+    }
+    .hero-banner__actions {
+      margin-top: 22px;
+    }
+    .hero-art {
+      padding: 16px;
+    }
+    .hero-art__command {
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+    .hero-art__assembly {
+      margin-top: 14px;
+      padding-top: 12px;
+    }
+    .hero-tree ul {
+      padding-left: 12px;
+    }
+    .hero-tree li {
+      padding-left: 12px;
+      font-size: 11.5px;
+    }
+    .hero-tree code {
+      font-size: 11.5px;
+    }
+    .hero-tracks {
+      gap: 10px;
+      padding-bottom: 22px;
+    }
+    .hero-track {
+      padding: 12px 12px 13px;
+    }
+    .hero-track__tag {
+      display: none;
+    }
+    .hero-track__name {
+      font-size: 14px;
+    }
+    .hero-track__desc {
+      display: none;
+    }
+    .section {
+      margin-top: var(--space-7);
+    }
+    .section-intro {
+      margin-bottom: var(--space-4);
+    }
+    .section-intro h2 {
+      font-size: 1.5rem;
+    }
+    .decision-grid {
+      grid-template-columns: 1fr;
+    }
+    .decision-card {
+      padding: 20px 22px;
+    }
+    .decision-card__title {
+      font-size: 1.15rem;
+    }
+    .decision-card__desc {
+      font-size: 13.5px;
+    }
+    .decision-card--feature {
+      gap: 16px;
+      padding: 22px 22px 20px;
+    }
+    .decision-card--feature .decision-card__title {
+      font-size: 1.38rem;
+    }
+    .decision-card--feature .decision-card__desc {
+      font-size: 14px;
+    }
+    .task-list li {
+      grid-template-columns: 36px minmax(0, 1fr);
+      gap: var(--space-3);
+      padding: 18px 20px;
+    }
+    .task-list__num {
+      padding-top: 3px;
+    }
+    .task-list h3 {
+      font-size: 1.125rem;
+    }
+    .task-list p {
+      font-size: 14px;
+    }
+    .source-card {
+      padding: 20px 22px;
+    }
+    .source-card__title {
+      font-size: 1.15rem;
+    }
+    .source-card__desc {
+      font-size: 13.5px;
+    }
+    .source-card__go {
+      padding-top: 18px;
+    }
+    .split {
+      gap: var(--space-6);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-track:hover,
+    .decision-card:hover,
+    .task-list li:hover,
+    .source-card:hover {
+      transform: none;
+    }
+    .button--start:hover,
+    .decision-card--feature:hover .decision-card__go {
+      transform: none;
+    }
+  }
+  @media (max-width: 400px) {
+    .hero-banner__title {
+      font-size: 32px;
+    }
+    .hero-art__command {
+      font-size: 11px;
+    }
+    .hero-tracks {
+      gap: 8px;
+    }
+    .hero-track {
+      padding: 10px 11px 11px;
+    }
+    .hero-track__num {
+      font-size: 10px;
+    }
+    .hero-track__name {
+      font-size: 13px;
+    }
+    .decision-card {
+      padding: 18px;
+    }
+    .decision-card__desc {
+      font-size: 13px;
+    }
+    .task-list li {
+      grid-template-columns: 30px minmax(0, 1fr);
+      padding: 16px;
+    }
+    .task-list h3 {
+      font-size: 1.06rem;
+    }
+    .source-card {
+      padding: 18px;
     }
   }
 </style>

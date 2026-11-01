@@ -1,3 +1,14 @@
+/* Source Serif 4 (OFL 1.1, variable weight axis) — Latin subset only; Chinese falls
+   through to the system serif. License shipped at /fonts/OFL.txt */
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("../assets/fonts/source-serif-4-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 *,
 *::before,
 *::after {
@@ -7,11 +18,14 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + var(--space-4));
 }
 
 body {
   margin: 0;
-  background: var(--paper);
+  background-color: var(--paper);
+  background-image: var(--grain), var(--paper-grad);
+  background-repeat: repeat, no-repeat, no-repeat;
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: var(--text-base);
@@ -55,6 +69,32 @@ a {
   border-bottom: 1px solid var(--line);
   background: color-mix(in srgb, var(--paper) 90%, transparent);
   backdrop-filter: blur(10px);
+}
+
+/* Safari < 18 only ships the prefixed property; the CSS minifier keeps just the
+   standard declaration when both appear next to each other. Mirrors the tokens
+   each surface uses: --glass, --hero-glass, --hero-button-glass. */
+@supports not (backdrop-filter: blur(1px)) {
+  .site-header {
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .hero-art,
+  .hero-track {
+    -webkit-backdrop-filter: var(--hero-glass);
+  }
+
+  .decision-card,
+  .decision-card--feature,
+  .task-list li,
+  .source-card {
+    -webkit-backdrop-filter: var(--glass);
+  }
+
+  .button--start,
+  .decision-card--feature .decision-card__go {
+    -webkit-backdrop-filter: var(--hero-button-glass);
+  }
 }
 
 .header-inner {
@@ -109,6 +149,7 @@ a {
 
 .header-actions {
   display: flex;
+  align-items: center;
   gap: var(--space-3);
   margin-left: auto;
   font-size: var(--text-sm);
@@ -122,6 +163,57 @@ a {
 
 .header-actions a:hover {
   color: var(--accent);
+}
+
+.theme-toggle,
+.accent-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper-raised);
+  color: var(--ink-soft);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.theme-toggle:hover,
+.accent-toggle:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.accent-toggle__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent-fill);
+  box-shadow: inset 0 0 0 1px rgb(17 22 20 / 18%);
+}
+
+.theme-toggle__icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.theme-toggle__icon--sun {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle__icon--sun {
+  display: block;
+}
+
+:root[data-theme="dark"] .theme-toggle__icon--moon {
+  display: none;
 }
 
 .site-footer {
@@ -145,6 +237,10 @@ main {
   padding-top: var(--space-6);
 }
 
+.home-main {
+  padding-top: 0;
+}
+
 .prose {
   max-width: var(--measure);
   min-width: 0;
@@ -158,21 +254,26 @@ main {
 }
 
 .prose h1 {
-  font-size: var(--text-4xl);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.28;
+  letter-spacing: 0.01em;
   margin: 0 0 var(--space-3);
 }
 
 .prose h2 {
+  font-family: var(--font-display);
   font-size: var(--text-2xl);
-  line-height: 1.35;
+  font-weight: 600;
+  line-height: 1.42;
   margin: var(--space-8) 0 var(--space-3);
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
 }
 
 .prose h3 {
   font-size: var(--text-xl);
+  font-weight: 600;
   margin: var(--space-6) 0 var(--space-2);
 }
 
@@ -341,17 +442,16 @@ main {
   padding: var(--space-3) var(--space-4);
   background: var(--paper-raised);
   border: 1px solid var(--line);
-  border-left: 3px solid var(--accent);
   border-radius: var(--radius-sm);
 }
 
 .answer__label {
   margin: 0;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent);
 }
 
 .answer p:last-child {
@@ -362,7 +462,7 @@ main {
 .version-badge {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-4);
   align-items: center;
   margin: var(--space-3) 0;
   font-family: var(--font-mono);
@@ -425,11 +525,20 @@ main {
 
 .toc__title {
   margin: 0 0 var(--space-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   color: var(--ink-faint);
+}
+
+.toc::before {
+  content: "";
+  display: block;
+  width: 32px;
+  height: 2px;
+  margin-bottom: var(--space-3);
+  background: var(--accent);
 }
 
 .toc ul {
@@ -457,7 +566,9 @@ main {
 
 @media (min-width: 1024px) {
   .article-grid {
-    grid-template-columns: minmax(0, 1fr) 220px;
+    grid-template-columns: minmax(0, var(--measure)) 220px;
+    justify-content: start;
+    gap: 64px;
   }
 
   .toc {
@@ -466,6 +577,38 @@ main {
     align-self: start;
     max-height: calc(100vh - var(--header-h) - var(--space-7));
     overflow: auto;
+    padding-left: var(--space-5);
+    border-left: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 1023px) {
+  .toc {
+    display: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .header-inner {
+    gap: var(--space-3);
+  }
+
+  .version-badge {
+    gap: var(--space-3);
+  }
+
+  .nav {
+    gap: var(--space-2);
+  }
+
+  .nav a {
+    font-size: 12px;
+  }
+
+  .theme-toggle,
+  .accent-toggle {
+    width: 28px;
+    height: 28px;
   }
 }
 
@@ -474,8 +617,12 @@ main {
     display: none;
   }
 
-  .header-actions {
+  .header-actions a {
     display: none;
+  }
+
+  .header-actions {
+    gap: var(--space-2);
   }
 
   .header-inner {
