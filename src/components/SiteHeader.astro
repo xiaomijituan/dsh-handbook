@@ -19,7 +19,7 @@ const path = Astro.url.pathname;
     <div class="header-actions">
       <a href={withBase('/search/')} aria-label="搜索">搜索</a>
       <a href={GITHUB_URL} rel="noopener">GitHub</a>
-      <button class="accent-toggle" type="button" data-accent-toggle aria-label="当前绿色强调色，点击换成蓝色" aria-pressed="false" title="当前绿色强调色，点击换成蓝色">
+      <button class="accent-toggle" type="button" data-accent-toggle aria-label="当前蓝色强调色，点击换成绿色" aria-pressed="false" title="当前蓝色强调色，点击换成绿色">
         <span class="accent-toggle__dot" aria-hidden="true"></span>
       </button>
       <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换到深色模式" aria-pressed="false" title="切换到深色模式">
@@ -41,19 +41,19 @@ const path = Astro.url.pathname;
     const accentButton = document.querySelector('[data-accent-toggle]');
     const meta = document.querySelector('meta[name="theme-color"]');
     const themeLabel = (dark) => (dark ? '切换到浅色模式' : '切换到深色模式');
-    const accentLabel = (blue) => (blue ? '当前蓝色强调色，点击换成绿色' : '当前绿色强调色，点击换成蓝色');
+    const accentLabel = (green) => (green ? '当前绿色强调色，点击换成蓝色' : '当前蓝色强调色，点击换成绿色');
     const apply = () => {
       const dark = root.dataset.theme === 'dark';
-      const blue = root.dataset.accent === 'blue';
+      const green = root.dataset.accent === 'green';
       if (themeButton) {
         themeButton.setAttribute('aria-pressed', String(dark));
         themeButton.setAttribute('aria-label', themeLabel(dark));
         themeButton.setAttribute('title', themeLabel(dark));
       }
       if (accentButton) {
-        accentButton.setAttribute('aria-pressed', String(blue));
-        accentButton.setAttribute('aria-label', accentLabel(blue));
-        accentButton.setAttribute('title', accentLabel(blue));
+        accentButton.setAttribute('aria-pressed', String(green));
+        accentButton.setAttribute('aria-label', accentLabel(green));
+        accentButton.setAttribute('title', accentLabel(green));
       }
       if (meta) meta.setAttribute('content', dark ? '#0e1116' : '#f6f7f4');
     };
@@ -70,8 +70,8 @@ const path = Astro.url.pathname;
     }
     if (accentButton) {
       accentButton.addEventListener('click', () => {
-        const next = root.dataset.accent === 'blue' ? 'green' : 'blue';
-        if (next === 'blue') root.dataset.accent = 'blue';
+        const next = root.dataset.accent === 'green' ? 'blue' : 'green';
+        if (next === 'green') root.dataset.accent = 'green';
         else delete root.dataset.accent;
         try {
           localStorage.setItem('dsh-accent', next);

@@ -45,7 +45,7 @@ const ogImage = new URL(withBase(image), site);
         try {
           const root = document.documentElement;
           if (localStorage.getItem('dsh-theme') === 'dark') root.dataset.theme = 'dark';
-          if (localStorage.getItem('dsh-accent') === 'blue') root.dataset.accent = 'blue';
+          if (localStorage.getItem('dsh-accent') === 'green') root.dataset.accent = 'green';
           if (root.dataset.theme === 'dark') {
             const meta = document.querySelector('meta[name="theme-color"]');
             if (meta) meta.setAttribute('content', '#0e1116');
