@@ -1,0 +1,214 @@
+---
+title: "DSH 插件生态地图：先找问题，再决定装什么"
+crumb: "插件生态"
+description: "用任务而不是榜单选择 DSH 插件，分清官方发现页、第三方市场与社区组织，并给出安装、版本和风险检查。"
+answer: "插件不是必选项。想看上下文再评估 dsh-context；想要侧栏工作台要按 DSH 版本选 Better Sidebar；想逛市场可用官方发现页或第三方 dshmarket。社区收录不等于官方认证。"
+updated: "2026-11-24"
+verified:
+  dsh: "0.2.1-rc.5"
+  npm_latest: "0.2.1-rc.5"
+  npm_next: "0.2.1-rc.5"
+  gh_tag: "dsh-v0.2.1-rc.5"
+  date: "2026-10-31"
+  os: ["windows", "macos"]
+difficulty: "beginner"
+keywords: ["deepseek harness 插件生态", "dsh 插件推荐", "dsh-context", "oh my dsh"]
+related: ["plugins", "plugins/install", "plugins/first-plugin"]
+faq:
+  - q: "插件页没有“发现”标签页怎么办？"
+    a: "RC5（0.2.1-rc.5）打开“插件”，点“实验性插件”旁的“更多”，启用“自定义插件市场”。上游当前文档已把开关直接列为“自定义插件索引”。启用后，“已安装”旁会出现“发现”。"
+  - q: "索引源应该填网站首页还是 JSON 地址？"
+    a: "填 JSON 索引文件地址，例如 https://cdn.jsdelivr.net/npm/dsh-plugin-catalog/index.json。填 https://dshmarket.com/ 这样的网页首页不会成为索引源。"
+  - q: "dsh-context 是 Oh My DSH 团队开发的吗？"
+    a: "不是。dsh-context 的作者是 bowenliang123，Oh My DSH 只是将 dsh-context 收录为社区精选项目。收录不代表开发、认证或安全保证。"
+  - q: "装上 dsh-context 就能自动省 Token 吗？"
+    a: "不能。dsh-context 主要帮助观察上下文由什么组成、怎样变化。是否省 Token，取决于观察后是否调整了文件读取范围、输出长度或任务组织方式。"
+---
+
+## 30 秒选一条路
+
+先回答“我想解决什么问题”，再决定要不要装插件：
+
+- **只想正常聊天、读写文件和运行命令**：先用 DSH 自带能力，不装插件。
+- **想知道上下文里装了什么、Token 花在哪里**：看下面的 **dsh-context**。
+- **想要文件树、编辑器、Git 变更和侧边对话**：看 **Better Sidebar**，先核对 DSH 版本。
+- **想浏览更多插件**：用官方“发现”页添加一个 JSON 索引，或安装第三方 **dshmarket**。
+- **想找作者、交流或报兼容性问题**：直接去项目仓库的 Issues 或社区讨论区。
+
+本页是**任务地图，不是“必装清单”**。下面三个社区项目都标为**未实测**：功能与版本要求来自项目 README 和 `package.json`，不代表本站已经安装验证，也不代表 DeepSeek 官方认证。
+
+## 先分清几个名字
+
+- **DeepSeek Harness（DSH）**：官方开源底座，负责模型、工具、会话和插件加载。
+- **官方“发现”页（Discover）**：DSH 自带的实验性浏览入口，但默认关闭，而且不内置任何索引源。索引里的内容仍由第三方提供。
+- **dshmarket**：一个第三方插件包，安装后提供自己的市场界面和目录。dshmarket 不是官方“发现”页。
+- **Oh My DSH**：[独立的非官方开发者社区](https://github.com/omdsh-dev)。Oh My DSH 维护自己的项目，也收录其他作者的作品。
+- **MyDSH**：[另一个非官方生态目录](https://mydsh.dev)，和 Oh My DSH 不是同一个团队。
+- **个人作者项目**：例如 `bowenliang123` 开发的 dsh-context。项目被某个社区目录收录，不代表目录团队就是作者。
+
+记住一句话：**看“谁维护”，不要只看“出现在哪个市场”。**
+
+## 打开官方“发现”：RC5 的六步操作
+
+本页的 DSH 基线是 **RC5，也就是 `0.2.1-rc.5`**。RC 是 Release Candidate（候选发布版），数字 `5` 表示第 5 个候选版本。按下面顺序操作：
+
+1. 打开 **插件**。
+2. 点击 **实验性插件** 旁边的 **更多**。
+3. 启用 **自定义插件市场**。
+4. 回到插件页，点击 **已安装** 旁边的 **发现**。
+5. 点击 **添加索引源**。
+6. 在 **索引 URL** 中粘贴 JSON 索引文件地址，再点 **添加**。
+
+可以直接试用的社区索引：
+
+```text
+https://cdn.jsdelivr.net/npm/dsh-plugin-catalog/index.json
+```
+
+该地址对应 `awesome-dsh-plugin` 的精选目录，通过 npm 与 jsDelivr 分发。这份索引是**第三方目录，不是 DeepSeek 官方索引**。2026-11-24 核验时，该地址返回 `200`、`application/json`、无重定向，文件开头为 `"format":1`。不要填 `https://dshmarket.com/` 这样的网页首页；索引源必须直接指向 JSON 文件。
+
+**版本标签会变化。** RC5 的开关叫“自定义插件市场”，输入框叫“索引 URL”；2026-11-24 核对的上游当前文档已把开关改叫“自定义插件索引”，直接列在“实验性插件”下，输入框叫“源地址”。找不到同名按钮时，按“实验性插件”和“添加索引源”这两个功能找。
+
+每个索引源属于当前 profile。换 profile 后要重新添加；添加前还要确认：
+
+- URL 使用 `http:` 或 `https:`，不能带用户名、密码或 `#` 片段。
+- 优先使用 HTTPS。能修改 `http:` 索引内容的人，也能修改索引列出的安装来源。
+- 索引是第三方内容。安装确认框里的包名、版本和来源要自己核对。
+- 安装插件会执行第三方代码。只装来源可信、权限要求看得懂的插件。
+
+完整安装、本地路径安装和报错处理见[插件安装](./install.mdx)。
+
+## 按任务看项目
+
+### 想看清上下文、Token 去向和多 Agent 关系：dsh-context
+
+- **解决什么问题**：查看当前上下文由什么组成、逐次请求怎样变化、文件和命令活动，以及父 Agent 与子 Agent 的关系。
+- **谁维护**：`bowenliang123`，仓库是 [bowenliang123/dsh-context](https://github.com/bowenliang123/dsh-context)。
+- **官方还是社区**：第三方插件。[Oh My DSH 精选项目](https://omdsh.dev/#projects)收录了 dsh-context，并标明作者是 `bowenliang123`；dsh-context 不是 Oh My DSH 团队开发的项目。
+- **版本要求**：2026-11-24 核验的项目版本是 `0.87.1`。`package.json` 的 `engines.dsh` 原文是：
+
+```text
+>=0.2.0-rc.2 || >=0.2.1-rc.2 || >=0.2.2-rc.1
+```
+
+`engines.dsh` 是插件声明的 DSH 版本范围；`||` 表示满足其中任意一段即可。本页的 RC5 满足 `>=0.2.1-rc.2`。项目 README 另写明：`0.2.0` 与 `0.2.1` 系列在各自的 `rc.2` 上验证，`0.2.2` 系列在 `rc.1` 与 `rc.3` 上验证。
+
+- **怎么安装**：在本机终端执行，把插件装进 `web` profile。
+
+```bash
+dsh plugin --profile web add dsh-context@0.87.1
+```
+
+项目 README 也提供了 Web UI 路线：在 **Add plugin** 向导中搜索 `dsh-context`，再点 **Install**。两种入口装进的是同一个 DSH 环境时才会显示在同一个界面里；桌面版要确认应用实际使用的 profile。
+
+- **出问题找谁**：先到[项目 Issues](https://github.com/bowenliang123/dsh-context/issues)搜索相同报错，再附上 DSH 版本、插件版本、完整报错和复现步骤。
+- **本站状态**：**未实测**。功能、版本和安装命令来自项目 README 与 `package.json`。
+
+项目 README 声称 dsh-context 获得 DeepSeek Harness 官方实名推荐，并称团队成员 `@tianyicui` 和 `@turtle1999` 推荐、加星。这是**项目方的声明**，本站没有逐条核验；推荐或加星也不等于官方开发、安全审计或持续维护保证。
+
+> dsh-context 是观察工具，不是自动优化工具。插件能帮助发现上下文膨胀的位置，但不会自行决定该读哪个文件、该缩短哪段输出。
+
+### 想把文件、终端、Git 和子代理放进侧栏：Better Sidebar
+
+- **解决什么问题**：把文件树、编辑器、Git 变更、任务和侧边对话集中到一个工作区，适合经常在多个窗口之间切换的场景。
+- **谁维护**：Oh My DSH 社区，仓库是 [omdsh-dev/DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar)。
+- **官方还是社区**：第三方社区项目。Oh My DSH 是独立、非官方开发者社区，与 DeepSeek 没有隶属或背书关系。
+- **版本要求**：插件版本必须和 DSH 版本线匹配。先在终端运行下面命令，确认实际启动的 DSH 版本：
+
+```bash
+dsh --version
+```
+
+2026-11-24 核验时，项目 README 给出下面三种常见对应关系：
+
+| 你的 DSH 版本 | 使用的 Better Sidebar 版本 |
+|---|---|
+| `0.2.1-rc.1` 到 `0.2.1-rc.5`，包括本页 RC5 | `0.28.2` |
+| `0.2.2-rc.1` | `0.32.0` |
+| `0.2.2-rc.2` 及更新 | `0.32.1` |
+
+- **RC5 怎么安装**：
+
+```bash
+dsh plugin --profile web add dsh-better-sidebar@0.28.2
+```
+
+如果你已经升级到 DSH `0.2.2-rc.2+`，项目 README 对应的命令是：
+
+```bash
+dsh plugin --profile web add dsh-better-sidebar@0.32.1
+```
+
+装完后按项目说明硬刷新浏览器：`Cmd/Ctrl+Shift+R`。**不要直接装 `latest`**；市场可能把插件的新版本装到旧 DSH 上，然后出现版本不兼容。
+
+- **出问题找谁**：到[项目 Issues](https://github.com/omdsh-dev/DSH-better-sidebar/issues)搜索；兼容性问题要同时写清 DSH 版本和 Better Sidebar 版本。
+- **本站状态**：**未实测**。版本对应关系来自项目 README。
+- **权限提醒**：项目 README 明确说明，文件系统路由可以访问操作系统权限允许的路径。安装前要确认这项权限符合自己的使用边界。
+
+### 想浏览更多插件：官方“发现”页或 dshmarket
+
+这是两条不同路线，先选一条，不需要同时安装。
+
+#### 路线 A：官方“发现”页
+
+“发现”页是 DSH 自带的实验功能，但默认关闭，而且**不内置任何索引源**。按[上面的六步说明](#打开官方发现rc5-的六步操作)启用后，添加一个 JSON 索引地址即可浏览。
+
+这条路线的优点是入口随 DSH 提供；缺点是市场里没有内容，必须自己选择并添加索引源。
+
+#### 路线 B：第三方 dshmarket
+
+- **谁维护**：`dsh-market` 组织，仓库是 [dsh-market/dsh-market](https://github.com/dsh-market/dsh-market)，网站是 [dshmarket.com](https://dshmarket.com)。
+- **解决什么问题**：在 DSH 内提供更完整的市场界面，包括搜索、收藏、更新和诊断等入口。
+- **官方还是社区**：第三方插件。dshmarket 自带目录，不需要再手动添加官方“发现”页的索引源。
+- **版本要求**：项目 README 要求 `dsh web 0.1.0-rc.6` 或更新版本。桌面端可能内置更旧的 DSH，安装前要核对应用版本。
+- **怎么安装**：普通 `dsh web` 执行：
+
+```bash
+dsh plugin --profile web add dshmarket
+```
+
+如果使用的是 DSH Desktop，项目建议在应用内的 **设置 → 插件** 搜索 `dshmarket` 安装。命令行装进的是 `profiles/web`，可能不是桌面应用实际使用的 profile。
+
+- **装完从哪里打开**：DSH `0.2.1+` 打开 **插件 → 插件市场**；更早版本在 **设置 → 插件市场**。
+- **出问题找谁**：到[项目 Issues](https://github.com/dsh-market/dsh-market/issues)反馈，并附上市场页面导出的脱敏日志。
+- **隐私与权限**：项目 README 写明，市场每天发送一次不含个人信息的匿名计数，可在设置里关闭；AI 搜索默认关闭，主动使用时会消耗当前配置模型的 Token。导出的备份可能包含 profile 配置里的密钥，上传前要自己检查。
+- **本站状态**：**未实测**。安装入口、版本要求和隐私说明来自 dshmarket 项目 README。
+
+## 这些名字的关系
+
+- **官方 DSH**
+  - 提供名为“发现”页的实验性入口。
+  - 不提供内置索引源，也不为索引里的第三方插件作安全或维护保证。
+- **独立第三方项目**
+  - dsh-context：作者 `bowenliang123`。
+  - Better Sidebar：Oh My DSH 社区维护。
+  - dshmarket：`dsh-market` 组织维护。
+- **社区组织与目录**
+  - Oh My DSH：维护 Better Sidebar 等项目，也收录 dsh-context 等其他作者的作品。
+  - MyDSH、awesome-dsh-plugin、dshfind：其他非官方目录或导航站。
+
+所以，**官方底座、官方入口、第三方插件、社区收录**是四件不同的事。出现在同一个目录里，不代表同一个团队开发，也不代表官方认证。
+
+## 安装前的四项检查
+
+1. **来源**：优先 HTTPS；核对仓库地址、npm 包名和安装确认框里的实际来源。
+2. **版本**：同时看 DSH 版本和插件版本。`latest` 会变化，旧宿主可能需要固定版本。`engines.dsh` 是插件作者声明的兼容范围，不是安全承诺。
+3. **权限**：插件以当前用户权限运行。重点看插件是否读写文件、执行命令、访问网络或控制浏览器。
+4. **维护**：看最近提交、发布记录、未关闭 Issues 和许可证。长期不更新的插件要降低安装优先级。
+
+暂时不需要这些能力时，**不装就是最稳妥的选择**。需要卸载时，从安装时使用的同一个入口移除，并确认对应 profile 的依赖记录已经更新。
+
+## 资料来源与时效
+
+本页的 DSH 基线核验沿用 2026-10-31 的 RC5 记录；社区项目与上游界面文案于 **2026-11-24** 按仓库 README、`package.json` 和界面源文件复核。社区项目变化快，安装前以仓库当前说明为准。
+
+- [DSH 官方插件索引文档](https://deepseek-harness.github.io/deepseek-harness/guide/plugin-market)：官方“发现”页、索引格式和安全边界。
+- [RC5 自定义插件市场说明](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/experimental/plugin-market-bundle/README.zh.md)：RC5 的“更多 → 自定义插件市场”入口。
+- [上游当前自定义插件索引说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/experimental/plugin-market-bundle/README.zh.md)：当前开关名称与入口。
+- [dsh-context 仓库](https://github.com/bowenliang123/dsh-context)：作者、功能、安装命令、版本声明与推荐声明。
+- [Better Sidebar 中文 README](https://github.com/omdsh-dev/DSH-better-sidebar/blob/main/README_ZH.md)：安装命令、版本对应表与权限说明。
+- [dshmarket 仓库](https://github.com/dsh-market/dsh-market)：安装入口、兼容要求、匿名计数与反馈方式。
+- [Oh My DSH 社区主页](https://github.com/omdsh-dev)：社区性质、精选项目与“收录不等于认证”的说明。
+- [MyDSH](https://mydsh.dev)：另一个非官方生态目录。
+- [awesome-dsh-plugin 精选目录](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin)：示例索引的第三方目录来源。
+- [Tianyi Cui 的社区索引推荐帖](https://x.com/tianyi/status/2104565558712959065)：社区导航站线索；帖子明确说明不代表公司立场。

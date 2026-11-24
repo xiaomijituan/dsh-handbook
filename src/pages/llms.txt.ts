@@ -6,7 +6,7 @@ import { absoluteBase, formatCheckedDate } from '../consts';
 const groups: { heading: string; slugs: string[] }[] = [
   { heading: '开始', slugs: ['about', 'models', 'troubleshooting'] },
   { heading: '安装', slugs: ['install', 'install/npx', 'install/desktop', 'install/source'] },
-  { heading: '插件', slugs: ['plugins', 'plugins/first-plugin', 'plugins/install'] },
+  { heading: '插件', slugs: ['plugins', 'plugins/ecosystem', 'plugins/install', 'plugins/first-plugin'] },
   { heading: '源码', slugs: ['source', 'source/plugin-tree', 'source/message-lifecycle', 'source/tool-pipeline'] },
   { heading: '版本', slugs: ['versions'] },
 ];

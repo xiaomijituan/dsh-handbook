@@ -50,6 +50,11 @@
       "date": "2026-10-31"
     },
     {
+      "id": "plugins/ecosystem",
+      "dsh": "0.2.1-rc.5",
+      "date": "2026-10-31"
+    },
+    {
       "id": "plugins/install",
       "dsh": "0.2.1-rc.5",
       "date": "2026-10-31"

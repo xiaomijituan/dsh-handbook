@@ -3,7 +3,7 @@ title: "dsh 故障排查：从 401 到插件不显示"
 crumb: "排错"
 description: "按安装、启动、模型、插件四类整理 dsh 的常见故障与处理步骤，包含 401 鉴权、端口占用、pnpm 缺失与 profile 装错。"
 answer: "先做三个检查：Node 版本、3080 是否有响应、npm registry 是否可达。401 多半是打开了不带 token 的地址；插件不显示多半是 profile 不对。"
-updated: "2026-10-31"
+updated: "2026-11-24"
 verified:
   dsh: "0.2.1-rc.5"
   npm_latest: "0.2.1-rc.5"
@@ -79,12 +79,20 @@ npm ping
 | `pnpm` 不是内部或外部命令 | 插件 CLI 依赖 pnpm | 安装 pnpm 后重试 |
 | `plugin command failed; diagnostics` | pnpm 执行失败 | 打开提示里的 `pnpm.log` 看原始错误 |
 | 装完不显示 | 装进了别的 profile | 用 `--profile` 指定正确 profile |
-| 索引里没有插件 | 没有添加索引源 | 开启“自定义插件索引”并添加索引 URL |
+| 没有“发现”标签页 | 自定义插件索引组合包未启用 | RC5：插件 → 实验性插件 → 更多 → 自定义插件市场；上游当前文档：直接点“自定义插件索引” |
+| “发现”页为空 | 还没有添加索引源 | 点“添加索引源”，填 JSON 索引地址，不要填网页首页；RC5 输入框叫“索引 URL”，上游当前文档叫“源地址” |
+| 索引读取失败 | 地址不是 JSON、网络不通或格式无效 | 打开“管理索引源…”看具体错误；优先使用 HTTPS，并确认地址直接返回 `application/json` |
 | 安装被拒绝 | 插件与当前 dsh 版本不兼容 | 查看插件的 `engines.dsh` 范围 |
 
 ## 仍未解决时的提问方式
 
-上面四类都对不上、问题仍然存在时，你在 GitHub 仓库提 issue，选“装不上”模板，并附上：
+上面四类都对不上、问题仍然存在时，先按问题归属找去处：
+
+- **DSH 本体行为、官方文档或共性问题**：到 [DeepSeek Harness Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions)。
+- **某个插件的问题**：到对应插件仓库的 Issues，附上插件版本。
+- **本手册内容错误或链接失效**：到 [dsh-handbook Issues](https://github.com/xiaomijituan/dsh-handbook/issues)。
+
+提问题时附上：
 
 1. 操作系统与版本
 2. `node -v`、`npm -v`、`pnpm -v`（如果用到）

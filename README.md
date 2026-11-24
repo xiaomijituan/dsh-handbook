@@ -15,7 +15,7 @@
 ## 内容
 
 - 安装：[选型](src/content/guide/install/index.mdx) · [桌面版](src/content/guide/install/desktop.mdx) · [npx](src/content/guide/install/npx.mdx) · [源码](src/content/guide/install/source.mdx)
-- 插件：[总览](src/content/guide/plugins/index.mdx) · [安装与排错](src/content/guide/plugins/install.mdx) · [第一个插件](src/content/guide/plugins/first-plugin.mdx)
+- 插件：[总览](src/content/guide/plugins/index.mdx) · [生态地图](src/content/guide/plugins/ecosystem.mdx) · [安装与排错](src/content/guide/plugins/install.mdx) · [第一个插件](src/content/guide/plugins/first-plugin.mdx)
 - 源码：[阅读顺序](src/content/guide/source/index.mdx) · [插件树](src/content/guide/source/plugin-tree.mdx) · [消息生命周期](src/content/guide/source/message-lifecycle.mdx) · [工具管线](src/content/guide/source/tool-pipeline.mdx)
 - 参考：[版本](src/content/guide/versions.mdx) · [模型](src/content/guide/models.mdx) · [排错](src/content/guide/troubleshooting.mdx) · [关于](src/content/guide/about.mdx)
 

@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import matter from 'gray-matter';
 import versions from '../data/versions.json';
+import { verifiedDate } from '../../scripts/lib/versions.mjs';
 import { absoluteBase, formatCheckedDate } from '../consts';
 
 const files = import.meta.glob('../content/guide/**/*.mdx', {
@@ -12,7 +13,7 @@ const files = import.meta.glob('../content/guide/**/*.mdx', {
 const groups: { heading: string; slugs: string[] }[] = [
   { heading: '开始', slugs: ['about', 'models', 'troubleshooting'] },
   { heading: '安装', slugs: ['install', 'install/npx', 'install/desktop', 'install/source'] },
-  { heading: '插件', slugs: ['plugins', 'plugins/first-plugin', 'plugins/install'] },
+  { heading: '插件', slugs: ['plugins', 'plugins/ecosystem', 'plugins/install', 'plugins/first-plugin'] },
   { heading: '源码', slugs: ['source', 'source/plugin-tree', 'source/message-lifecycle', 'source/tool-pipeline'] },
   { heading: '版本', slugs: ['versions'] },
 ];
@@ -54,8 +55,7 @@ export const GET: APIRoute = ({ site }) => {
       lines.push('---', '', `# ${index}. ${data.title}`, '');
       lines.push(`> ${data.description}`, '');
       lines.push(`摘要：${data.answer}`, '');
-      const updated = new Date(data.updated).toISOString().slice(0, 10);
-      lines.push(`核验：dsh ${data.verified.dsh}，${updated}；原文 ${base}/${slug}/`, '');
+      lines.push(`核验：dsh ${data.verified.dsh}，${verifiedDate(data)}；原文 ${base}/${slug}/`, '');
       lines.push(absolutize(page.content), '');
       if (data.faq?.length) {
         lines.push('## 常见问题', '');

@@ -10,6 +10,10 @@ export function parseVersion(value) {
   };
 }
 
+export function verifiedDate(page) {
+  return new Date(page.verified.date).toISOString().slice(0, 10);
+}
+
 export function minorDistance(a, b) {
   const left = parseVersion(a);
   const right = parseVersion(b);

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseVersion, minorDistance, evaluatePages } from '../scripts/lib/versions.mjs';
+import { parseVersion, minorDistance, evaluatePages, verifiedDate } from '../scripts/lib/versions.mjs';
 
 test('parseVersion 接受带 rc 的版本', () => {
   assert.deepEqual(parseVersion('0.2.1-rc.2'), {
@@ -21,6 +21,13 @@ test('minorDistance 跨 minor 计数', () => {
   assert.equal(minorDistance('0.2.1-rc.2', '0.2.1-rc.4'), 0);
   assert.equal(minorDistance('0.2.0', '0.3.1'), 1);
   assert.equal(minorDistance('0.2.0', '1.0.0'), 998);
+});
+
+test('verifiedDate 使用核验日期而不是编辑日期', () => {
+  assert.equal(
+    verifiedDate({ updated: '2026-11-24', verified: { date: '2026-10-31' } }),
+    '2026-10-31',
+  );
 });
 
 test('evaluatePages 缺 verified 是错误', () => {

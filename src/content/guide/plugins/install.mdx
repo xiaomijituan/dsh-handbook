@@ -3,7 +3,7 @@ title: "dsh 插件安装与排错：三种入口和一张症状表"
 crumb: "插件安装"
 description: "覆盖 Web UI、命令行与本地路径三种插件安装入口，解释 profile 与 pnpm 依赖，并给出装不上、装完不显示等问题的排查表。"
 answer: "三种入口：Web UI 的插件页、命令行 dsh plugin、以及本地路径安装。命令行必须能找到 pnpm；装完不显示多半是装进了别的 profile。"
-updated: "2026-10-31"
+updated: "2026-11-24"
 verified:
   dsh: "0.2.1-rc.5"
   npm_latest: "0.2.1-rc.5"
@@ -13,7 +13,7 @@ verified:
   os: ["windows", "macos"]
 difficulty: "intermediate"
 keywords: ["deepseek harness 插件安装", "dsh 插件 报错", "dsh plugin"]
-related: ["plugins", "troubleshooting"]
+related: ["plugins", "plugins/ecosystem", "troubleshooting"]
 ---
 
 ## 三种安装入口
@@ -55,15 +55,36 @@ dsh: plugin command failed; diagnostics: ...\.plugin-manager\logs\operation-...\
 
 ## Web UI：插件页与发现
 
-打开 Web UI 后，从左侧导航进入“插件”页。插件页会列出已安装的组合包，每个组合包都有独立的开关。
+“发现”页默认不存在，因为自定义插件索引组合包默认关闭。即使启用，DSH 也不内置任何索引源。“发现”页不是安装一个“市场插件”后才出现，而是 DSH 自带的一项实验功能。
 
-“发现”页默认没有索引源。官方文档写明：DSH 不内置任何索引源；要在“发现”页浏览插件，你要先打开“实验性插件”下的“自定义插件索引”，再添加索引文件 URL。
+本页核验的 DSH `0.2.1-rc.5` 按下面顺序打开：
+
+1. 打开 **插件**。
+2. 点击 **实验性插件** 旁边的 **更多**。
+3. 打开 **自定义插件市场**。
+4. 回到插件页，“已安装”旁边会出现 **发现**。
+5. 点击 **添加索引源**。
+6. 在 **索引 URL** 中粘贴 JSON 索引文件地址，再点 **添加**。
+
+可以直接试用的社区索引示例：
+
+```text
+https://cdn.jsdelivr.net/npm/dsh-plugin-catalog/index.json
+```
+
+这是第三方目录，不是 DeepSeek 官方索引。2026-11-24 核验时，该地址返回 `200`、`application/json`、无重定向，文件开头为 `"format":1`。目录来源是 awesome-dsh-plugin 的精选列表，通过 npm 与 jsDelivr 分发。不要填 `https://dshmarket.com/` 这样的网页首页；索引源必须是 JSON 文件本身。
+
+**版本标签会变化。** RC5（`0.2.1-rc.5`）的开关叫“自定义插件市场”，输入框叫“索引 URL”；2026-11-24 核对的上游当前文档已把开关改叫“自定义插件索引”，直接列在“实验性插件”下，输入框叫“源地址”。找不到同名按钮时，按“实验性插件”和“添加索引源”这两个功能找。每个索引源属于当前 profile，换 profile 后要重新添加。
 
 添加索引时注意：
 
-- URL 必须是 `http:` 或 `https:`，不能带用户名、密码或 `#` 片段
-- 优先 HTTPS；能修改 `http:` 索引内容的人，也能修改该索引列出的安装来源
-- 索引是第三方内容，安装确认框里显示的来源要你自己核对
+- URL 必须是 `http:` 或 `https:`，不能带用户名、密码或 `#` 片段。
+- 优先 HTTPS；能修改 `http:` 索引内容的人，也能修改该索引列出的安装来源。
+- 索引是第三方内容，安装确认框里显示的来源要自己核对。
+- RC5 的安装确认框主要显示来源与信任提示，不逐项列出插件权限。安装前要回项目 README 或源码查看读写文件、执行命令、联网等能力。
+- 只想正常使用 DSH 时，不必为了“有市场”而安装额外插件。按任务选择项目见[插件生态地图](./ecosystem.mdx)。
+
+如果安装的是第三方 `dshmarket` 插件，入口是 **插件 → 插件市场**（DSH `0.2.1+`）；更早版本在 **设置 → 插件市场**。dshmarket 自带目录，与官方“发现”页是两条不同路线。
 
 ## 本地路径安装（开发用）
 
