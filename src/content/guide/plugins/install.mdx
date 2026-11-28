@@ -3,13 +3,13 @@ title: "dsh 插件安装与排错：三种入口和一张症状表"
 crumb: "插件安装"
 description: "覆盖 Web UI、命令行与本地路径三种插件安装入口，解释 profile 与 pnpm 依赖，并给出装不上、装完不显示等问题的排查表。"
 answer: "三种入口：Web UI 的插件页、命令行 dsh plugin、以及本地路径安装。命令行必须能找到 pnpm；装完不显示多半是装进了别的 profile。"
-updated: "2026-11-24"
+updated: "2026-11-28"
 verified:
-  dsh: "0.2.1-rc.5"
-  npm_latest: "0.2.1-rc.5"
-  npm_next: "0.2.1-rc.5"
-  gh_tag: "dsh-v0.2.1-rc.5"
-  date: "2026-10-31"
+  dsh: "0.2.2-rc.5"
+  npm_latest: "0.2.2-rc.5"
+  npm_next: "0.2.2-rc.5"
+  gh_tag: "dsh-v0.2.3-alpha.2"
+  date: "2026-11-28"
   os: ["windows", "macos"]
 difficulty: "intermediate"
 keywords: ["deepseek harness 插件安装", "dsh 插件 报错", "dsh plugin"]
@@ -23,6 +23,12 @@ related: ["plugins", "plugins/ecosystem", "troubleshooting"]
 - **本地路径**：适合还在开发中的插件，从本地目录直接装进 profile；本机要有 pnpm。
 
 三种入口都会把插件写进某个 profile 的依赖记录，区别只在于由谁执行安装命令。
+
+### 0.2.2-rc.5 的变化
+
+2026-11-28 按官方文档复核：当前开关名是**自定义插件索引**，直接位于**插件 → 实验性插件**下；打开后，**已安装**旁出现**发现**。索引格式除了 npm 包，也支持 Git 仓库来源，版本条目必须固定 40 位提交 SHA， monorepo 可以额外指定目录。安装确认框会显示 npm 包与 registry，或 Git 仓库、提交与目录。
+
+插件管理器在 `0.2.2-rc.1` 起支持更新第三方插件包，热更新失败时会尝试恢复旧版本。安装失败与安装后启用失败会分别显示诊断，并保留 Host 日志入口。依赖 `BundleInfo.updatable` 的第三方代码需要迁移到 `BundleInfo.update`；普通使用者不需要改配置。
 
 ## 命令行：dsh plugin add
 

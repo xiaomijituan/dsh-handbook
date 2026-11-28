@@ -3,13 +3,13 @@ title: "用 npx 运行 DeepSeek Harness：命令行安装"
 crumb: "npx"
 description: "用 npx 启动 dsh Web UI 的完整步骤，解释 latest 与 next 的差别、带 token 的访问地址、401 的原因与端口占用处理。"
 answer: "先确认 Node 可用，再运行 npx @deepseek-ai/dsh@latest web。启动后会打印带 token 的本地地址；直接访问 127.0.0.1:3080 会返回 401，必须用打印出来的完整地址。"
-updated: "2026-10-31"
+updated: "2026-11-28"
 verified:
-  dsh: "0.2.1-rc.5"
-  npm_latest: "0.2.1-rc.5"
-  npm_next: "0.2.1-rc.5"
-  gh_tag: "dsh-v0.2.1-rc.5"
-  date: "2026-10-31"
+  dsh: "0.2.2-rc.5"
+  npm_latest: "0.2.2-rc.5"
+  npm_next: "0.2.2-rc.5"
+  gh_tag: "dsh-v0.2.3-alpha.2"
+  date: "2026-11-28"
   os: ["windows", "macos", "linux"]
 difficulty: "beginner"
 keywords: ["deepseek harness npx", "dsh 命令行", "deepseek harness 401"]
@@ -23,7 +23,7 @@ node -v
 npm -v
 ```
 
-本页的实测环境是 Windows 11 + Node 24.18.0 + npm 11.16.0。dsh 对 Node 的最低要求以官方 README 为准，不要只照抄上面这组版本号。
+本页保留的实测环境是 Windows 11 + Node 24.18.0 + npm 11.16.0。2026-11-28 复核 npm 官方元数据：latest `0.2.2-rc.5` 声明 `engines.node >=24.9.0`；alpha `0.2.3-alpha.2` 则要求 `^24.22.3 || >=26.13.1`。不要只照抄上面的实测版本号，安装前以目标版本的 `engines.node` 为准。
 
 npx 需要联网访问 npm registry（npm 的官方包仓库，命令从那里下载安装包）。在公司网络或代理环境下，你先确认能访问 registry，再运行命令。
 
@@ -49,13 +49,13 @@ npx @deepseek-ai/dsh@latest web --no-open
 
 ## latest 与 next 的区别
 
-npm 给同一个包准备了好几个发布通道——latest、next、alpha 这类标签，每个标签指向一个具体版本。2026-10-31 核验到的值是：
+npm 给同一个包准备了好几个发布通道——latest、next、alpha 这类标签，每个标签指向一个具体版本。2026-11-28 核验到的值是：
 
 | 发布通道标签 | 标签指向的版本 |
 |---|---|
-| latest | 0.2.1-rc.5 |
-| next | 0.2.1-rc.5 |
-| alpha | 0.2.2-alpha.2 |
+| latest | 0.2.2-rc.5 |
+| next | 0.2.2-rc.5 |
+| alpha | 0.2.3-alpha.2 |
 
 `npx @deepseek-ai/dsh@latest web` 装到的是 latest 指向的版本。本页核验时 next 与 latest 指向同一个版本，但两个标签并不保证一直相同；想明确选择通道，就在命令里写出 `@next` 或 `@alpha`：
 

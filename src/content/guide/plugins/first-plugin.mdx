@@ -3,13 +3,13 @@ title: "写第一个插件：从加载到注册工具"
 crumb: "第一个插件"
 description: "用一个最小插件验证加载，再打包成 bundle 安装进 profile，最后按官方 cookbook 注册一个模型可调用的工具。"
 answer: "最小插件只需导出 name 与 apply()。先用 --patch 覆盖层确认日志出现 plugin loaded，再打包成 bundle 用 dsh plugin add 安装。注册工具还需要 @deepseek-ai/dsh-tools。"
-updated: "2026-10-31"
+updated: "2026-11-28"
 verified:
-  dsh: "0.2.1-rc.5"
-  npm_latest: "0.2.1-rc.5"
-  npm_next: "0.2.1-rc.5"
-  gh_tag: "dsh-v0.2.1-rc.5"
-  date: "2026-10-31"
+  dsh: "0.2.2-rc.5"
+  npm_latest: "0.2.2-rc.5"
+  npm_next: "0.2.2-rc.5"
+  gh_tag: "dsh-v0.2.3-alpha.2"
+  date: "2026-11-28"
   os: ["windows", "macos"]
 difficulty: "advanced"
 keywords: ["deepseek harness 插件开发", "dsh 插件 教程", "dsh-plugin"]
@@ -137,6 +137,19 @@ export function apply(ctx: Context) {
 - `output.render` 决定工具结果以什么形式呈现给模型；`execute` 的返回值必须符合 `output.schema` 声明的规范。
 
 **核验状态：** 最小加载与 bundle 安装已实测；工具注册代码按官方《开发一个工具》教程编写，本页没有完成“带模型 Key 调用 greet 工具”的端到端验证。工具版插件还需要把 `@deepseek-ai/dsh-tools` 写进包依赖，具体包结构以官方文档为准。
+
+## 从 Git 仓库安装时的构建授权
+
+官方 `0.2.2-rc.5` 文档确认，可以直接安装 Git 仓库，但 Git 安装拉取的是源码，不会自动得到发布到 npm 时的构建产物。TypeScript 包需要作者提供可在安装后运行的 `prepare` 脚本；pnpm ≥10 在用户显式允许前会拒绝运行 Git 依赖的构建脚本。
+
+授权写在目标 profile 的 `pnpm-workspace.yaml`，只对确实信任的包开启：
+
+```yaml
+allowBuilds:
+  dsh-plugin-hello: true
+```
+
+这相当于允许第三方代码在安装时以当前用户权限执行，且不在 agent 沙箱内。优先固定 commit，并在授权前阅读构建脚本。
 
 ## 发布到 npm 与 GitHub
 

@@ -3,13 +3,13 @@ title: "DeepSeek Harness 插件：先装什么，怎么判断靠不靠谱"
 crumb: "插件"
 description: "解释 dsh 的 bundle、profile 与插件关系，说明插件索引不是内置的，并给出判断第三方插件是否值得安装的检查清单。"
 answer: "dsh 的插件以 bundle 形式组合进 profile。DSH 不内置第三方插件索引，“发现”需要开启实验性的自定义插件索引并自己添加索引 URL；第三方插件未实测不收录。"
-updated: "2026-11-24"
+updated: "2026-11-28"
 verified:
-  dsh: "0.2.1-rc.5"
-  npm_latest: "0.2.1-rc.5"
-  npm_next: "0.2.1-rc.5"
-  gh_tag: "dsh-v0.2.1-rc.5"
-  date: "2026-10-31"
+  dsh: "0.2.2-rc.5"
+  npm_latest: "0.2.2-rc.5"
+  npm_next: "0.2.2-rc.5"
+  gh_tag: "dsh-v0.2.3-alpha.2"
+  date: "2026-11-28"
   os: ["windows", "macos"]
 difficulty: "beginner"
 keywords: ["deepseek harness 插件", "dsh 插件推荐", "deepseek harness bundle"]
@@ -56,6 +56,8 @@ DSH 不内置任何第三方插件索引源。官方“发现”页是一项实�
 第一次找插件，先看[插件生态地图](./ecosystem.mdx)：该页按任务区分官方发现页、第三方 `dshmarket`、Oh My DSH 社区项目和作者自己的仓库，避免把“社区收录”误认为“官方开发”。完整的六步操作见[插件安装](./install.mdx#web-ui插件页与发现)。
 
 也就是说，市场里的内容全部来自第三方。索引里的标题、描述、作者和来源都由索引提供方决定，DSH 只检查文件格式，不验证这些声明。
+
+2026-11-28 复核的 `0.2.2-rc.5` 官方文档还确认：索引版本可以指向 npm 包，也可以指向固定提交的 Git 仓库与可选子目录；插件管理器支持更新第三方插件包，并在热更新失败时尝试恢复旧版本。Git 来源只是安装来源的一种，不代表 DSH 替使用者审计了仓库内容。
 
 安装之前至少检查四件事：
 
